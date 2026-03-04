@@ -1,0 +1,84 @@
+
+> studysync@0.1.0 build
+> next build
+
+   Γû▓ Next.js 15.1.0
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ΓÜá Compiled with warnings
+
+./src/components/InteractiveBackground.tsx
+Attempted import error: 'animejs' does not contain a default export (imported as 'anime').
+
+Import trace for requested module:
+./src/components/InteractiveBackground.tsx
+./src/app/page.tsx
+
+./src/components/InteractiveBackground.tsx
+Attempted import error: 'animejs' does not contain a default export (imported as 'anime').
+
+Import trace for requested module:
+./src/components/InteractiveBackground.tsx
+./src/app/page.tsx
+
+./src/components/InteractiveBackground.tsx
+Attempted import error: 'animejs' does not contain a default export (imported as 'anime').
+
+Import trace for requested module:
+./src/components/InteractiveBackground.tsx
+./src/app/page.tsx
+
+./src/components/InteractiveBackground.tsx
+Attempted import error: 'animejs' does not contain a default export (imported as 'anime').
+
+Import trace for requested module:
+./src/components/InteractiveBackground.tsx
+./src/app/page.tsx
+
+ ΓÜá Compiled with warnings
+
+./src/components/InteractiveBackground.tsx
+Attempted import error: 'animejs' does not contain a default export (imported as 'anime').
+
+Import trace for requested module:
+./src/components/InteractiveBackground.tsx
+./src/app/page.tsx
+
+./src/components/InteractiveBackground.tsx
+Attempted import error: 'animejs' does not contain a default export (imported as 'anime').
+
+Import trace for requested module:
+./src/components/InteractiveBackground.tsx
+./src/app/page.tsx
+
+./src/components/InteractiveBackground.tsx
+Attempted import error: 'animejs' does not contain a default export (imported as 'anime').
+
+Import trace for requested module:
+./src/components/InteractiveBackground.tsx
+./src/app/page.tsx
+
+./src/components/InteractiveBackground.tsx
+Attempted import error: 'animejs' does not contain a default export (imported as 'anime').
+
+Import trace for requested module:
+./src/components/InteractiveBackground.tsx
+./src/app/page.tsx
+
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+.next/types/app/api/auth/[...nextauth]/route.ts:12:13
+Type error: Type 'OmitWithTag<typeof import("C:/Users/gurjyot/Desktop/college/project/cwp/src/app/api/auth/[...nextauth]/route"), "config" | "generateStaticParams" | "revalidate" | "dynamic" | "dynamicParams" | ... 10 more ... | "PATCH", "">' does not satisfy the constraint '{ [x: string]: never; }'.
+  Property 'authOptions' is incompatible with index signature.
+    Type '{ adapter: Adapter; providers: OAuthConfig<GoogleProfile>[]; pages: { signIn: string; newUser: string; }; callbacks: { session({ session, user }: any): Promise<any>; }; secret: string; }' is not assignable to type 'never'.
+
+  10 |
+  11 | // Check that the entry is a valid entry
+> 12 | checkFields<Diff<{
+     |             ^
+  13 |   GET?: Function
+  14 |   HEAD?: Function
+  15 |   OPTIONS?: Function
