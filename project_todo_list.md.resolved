@@ -1,0 +1,36 @@
+# StudySync Project To-Do List
+
+This document tracks the tasks required to bring StudySync from design to implementation.
+
+## 📋 1. PRD & Requirements
+- [ ] **Finalize Data Models**: Define schema for Users, Rooms, Friends, and Messages.
+- [ ] **Edge Case Specification**: Document behavior for full rooms, disconnected participants, and failed authentication.
+- [ ] **AI Bot Roadmap**: Define the initial "Coming Soon" placeholder requirements and future AI capabilities.
+- [ ] **Moderation Policy**: Define Admin rules for kicking/muting and reporting users.
+- [ ] **Performance Targets**: Set targets for video latency and page load speeds.
+
+## 🎨 2. Design & UX
+- [ ] **UI Component Library**: Create reusable components for buttons (purple gradients), inputs, and cards (12-16px radius).
+- [ ] **Hero Section Mockup**: Design the high-impact landing page with parallax and floating elements.
+- [ ] **Video Interface Grid**: Design the responsive Discord-style video grid for 2-8 participants.
+- [ ] **Dark Mode Implementation Plan**: Define color tokens for seamless switching between white/black backgrounds.
+- [ ] **Micro-animations**: Design hover effects for room cards and breadcrumb transitions.
+- [ ] **Pomodoro UI**: Design the circular progress indicator and sound notification interaction.
+
+## 💻 3. Tech Stack & Implementation
+- [ ] **Project Initialization**: Setup Next.js with TypeScript and a structured folder system.
+- [ ] **Authentication Setup**: Integrate NextAuth.js for Google OAuth and JWT session handling.
+- [ ] **Real-time Infrastructure**: Implement Socket.io for live room updates and global chat.
+- [ ] **Video Implementation**: Research and integrate WebRTC (e.g., SimplePeer or a managed service like Daily.co).
+- [ ] **Database Setup**: Configure PostgreSQL with Prisma for efficient data management.
+- [ ] **Global State Management**: Setup state for Pomodoro timers and active room status.
+- [ ] **Deployment Pipeline**: Configure CI/CD for automated testing and staging deployments.
+
+---
+
+## ✅ Status Overview
+| Category | Progress | Status |
+| :--- | :--- | :--- |
+| **PRD** | 60% | In Progress |
+| **Design** | 20% | Planning |
+| **Tech Stack** | 0% | Not Started |
