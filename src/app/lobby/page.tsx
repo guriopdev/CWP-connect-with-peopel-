@@ -31,27 +31,56 @@ export default function LobbyPage() {
     const [activeTab, setActiveTab] = useState<View>("rooms");
     const [chatMode, setChatMode] = useState<ChatMode>("global");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [rooms, setRooms] = useState<{ id: number; name: string; subject: string; users: number; isLocked: boolean; password?: string; admin: string; }[]>([]);
+    const [rooms, setRooms] = useState<any[]>([]);
+    const [loadingRooms, setLoadingRooms] = useState(true);
 
     const [newRoom, setNewRoom] = useState({ name: "", subject: "General", isLocked: false, password: "" });
     const [protectedRoom, setProtectedRoom] = useState<any>(null);
     const [inputPassword, setInputPassword] = useState("");
     const [passwordError, setPasswordError] = useState(false);
 
-    const handleCreateRoom = (e: React.FormEvent) => {
+    // Fetch rooms from the database on load
+    useEffect(() => {
+        async function fetchRooms() {
+            try {
+                const res = await fetch("/api/rooms");
+                if (res.ok) {
+                    const data = await res.json();
+                    setRooms(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch rooms:", err);
+            } finally {
+                setLoadingRooms(false);
+            }
+        }
+        if (status === "authenticated") {
+            fetchRooms();
+        }
+    }, [status]);
+
+    const handleCreateRoom = async (e: React.FormEvent) => {
         e.preventDefault();
-        const room = {
-            id: Date.now(),
-            name: newRoom.name,
-            subject: newRoom.subject,
-            users: 1,
-            isLocked: newRoom.isLocked,
-            password: newRoom.password,
-            admin: "You"
-        };
-        setRooms([room, ...rooms]);
-        setIsCreateModalOpen(false);
-        setNewRoom({ name: "", subject: "General", isLocked: false, password: "" });
+        try {
+            const res = await fetch("/api/rooms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: newRoom.name,
+                    subject: newRoom.subject,
+                    isLocked: newRoom.isLocked,
+                    password: newRoom.password,
+                }),
+            });
+            if (res.ok) {
+                const createdRoom = await res.json();
+                setRooms([createdRoom, ...rooms]);
+                setIsCreateModalOpen(false);
+                setNewRoom({ name: "", subject: "General", isLocked: false, password: "" });
+            }
+        } catch (err) {
+            console.error("Failed to create room:", err);
+        }
     };
 
     const handleJoinRoom = (room: any) => {
@@ -64,11 +93,28 @@ export default function LobbyPage() {
         }
     };
 
-    const verifyPassword = (e: React.FormEvent) => {
+    const verifyPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (inputPassword === protectedRoom.password) {
-            router.push(`/room/${protectedRoom.id}`);
-        } else {
+        try {
+            const res = await fetch("/api/rooms/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    roomId: protectedRoom.id,
+                    password: inputPassword,
+                }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    router.push(`/room/${protectedRoom.id}`);
+                } else {
+                    setPasswordError(true);
+                }
+            } else {
+                setPasswordError(true);
+            }
+        } catch (err) {
             setPasswordError(true);
         }
     };
