@@ -11,6 +11,9 @@ export async function GET() {
                 admin: {
                     select: { name: true, username: true },
                 },
+                _count: {
+                    select: { participants: true },
+                },
             },
             orderBy: { createdAt: "desc" },
         });
@@ -21,7 +24,7 @@ export async function GET() {
             subject: room.subject,
             isLocked: room.isLocked,
             admin: room.admin.username || room.admin.name || "Unknown",
-            users: 0, // Placeholder – real-time count would need WebSockets
+            users: room._count.participants,
             createdAt: room.createdAt,
         }));
 

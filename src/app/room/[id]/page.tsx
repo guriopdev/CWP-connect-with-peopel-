@@ -71,16 +71,83 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         }
     }, [isMuted, isVideoOff, localStream]);
 
-    const [activeParticipants, setActiveParticipants] = useState([
-        {
-            id: 1, name: "You", username: "@you", isMe: true, isSpeaking: false, color: "bg-purple-500",
-            isFriend: true, requestSent: false, bio: "Building StudySync 🚀", country: "India", education: "CS Engineer"
-        }
-    ]);
+    const [activeParticipants, setActiveParticipants] = useState<any[]>([]);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-    const sendFriendRequest = (id: number) => {
+    const COLORS = ["bg-purple-500", "bg-blue-500", "bg-emerald-500", "bg-rose-500", "bg-amber-500", "bg-cyan-500", "bg-pink-500"];
+
+    // Fetch current user session
+    useEffect(() => {
+        fetch("/api/user/profile").then(res => res.json()).then(data => {
+            if (data?.id) setCurrentUserId(data.id);
+        }).catch(() => {});
+    }, []);
+
+    // Join room when user enters, heartbeat every 10s, leave on unmount
+    useEffect(() => {
+        if (!hasEntered || !currentUserId) return;
+
+        // Join
+        fetch("/api/rooms/participants", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ roomId: id, action: "join" }),
+        });
+
+        // Heartbeat every 10 seconds
+        const heartbeatInterval = setInterval(() => {
+            fetch("/api/rooms/participants", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ roomId: id, action: "heartbeat" }),
+            });
+        }, 10000);
+
+        // Poll participants every 5 seconds
+        const fetchParticipants = async () => {
+            try {
+                const res = await fetch(`/api/rooms/participants?roomId=${id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const mapped = data.map((p: any, i: number) => ({
+                        id: p.user.id,
+                        name: p.user.name || "User",
+                        username: p.user.username ? `@${p.user.username}` : "",
+                        isMe: p.user.id === currentUserId,
+                        isSpeaking: false,
+                        color: COLORS[i % COLORS.length],
+                        isFriend: false,
+                        requestSent: false,
+                        bio: p.user.bio || "",
+                        country: p.user.country || "",
+                        education: p.user.education || "",
+                        image: p.user.image || null,
+                    }));
+                    setActiveParticipants(mapped);
+                }
+            } catch (err) {
+                console.error("Failed to fetch participants:", err);
+            }
+        };
+
+        fetchParticipants();
+        const pollInterval = setInterval(fetchParticipants, 5000);
+
+        // Leave on unmount
+        return () => {
+            clearInterval(heartbeatInterval);
+            clearInterval(pollInterval);
+            fetch("/api/rooms/participants", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ roomId: id, action: "leave" }),
+            });
+        };
+    }, [hasEntered, currentUserId, id]);
+
+    const sendFriendRequest = (participantId: string) => {
         setActiveParticipants(prev => prev.map(p =>
-            p.id === id ? { ...p, requestSent: true } : p
+            p.id === participantId ? { ...p, requestSent: true } : p
         ));
     };
 
@@ -390,7 +457,14 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                         <motion.button
                             whileHover={{ scale: 1.05, boxShadow: "0 0 40px rgba(239,68,68,0.3)" }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => router.push("/lobby")}
+                            onClick={async () => {
+                                await fetch("/api/rooms/participants", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ roomId: id, action: "leave" }),
+                                });
+                                router.push("/lobby");
+                            }}
                             className="px-12 py-5 rounded-[2rem] bg-red-600/90 hover:bg-red-600 border border-red-500/30 text-white shadow-3xl transition-all flex items-center gap-4 font-black text-sm uppercase tracking-[0.3em] italic"
                         >
                             <PhoneOff size={24} fill="currentColor" /> Leave
