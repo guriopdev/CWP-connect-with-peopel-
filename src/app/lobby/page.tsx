@@ -90,28 +90,40 @@ function LobbyContent() {
         }
     }, [status]);
 
-    const handleCreateRoom = async (e: React.FormEvent) => {
+    const handleCreateRoom = (e: React.FormEvent) => {
         e.preventDefault();
-        try {
-            const res = await fetch("/api/rooms", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: newRoom.name,
-                    subject: newRoom.subject,
-                    isLocked: newRoom.isLocked,
-                    password: newRoom.password,
-                }),
-            });
+        
+        // Optimistic Room UI Update for instant closing
+        const optimisticRoom = {
+            id: "temp-" + Date.now(),
+            name: newRoom.name,
+            subject: newRoom.subject,
+            isLocked: newRoom.isLocked,
+            admin: session?.user?.username || session?.user?.name || "You",
+            adminId: currentUserId,
+            users: 0
+        };
+        
+        setRooms(prev => [optimisticRoom, ...prev]);
+        setIsCreateModalOpen(false);
+        setNewRoom({ name: "", subject: "General", isLocked: false, password: "" });
+
+        fetch("/api/rooms", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: optimisticRoom.name,
+                subject: optimisticRoom.subject,
+                isLocked: optimisticRoom.isLocked,
+                password: newRoom.password,
+            }),
+        }).then(async (res) => {
             if (res.ok) {
                 const createdRoom = await res.json();
-                setRooms([createdRoom, ...rooms]);
-                setIsCreateModalOpen(false);
-                setNewRoom({ name: "", subject: "General", isLocked: false, password: "" });
+                // Replace optimistic room with real database room
+                setRooms(prev => prev.map(r => r.id === optimisticRoom.id ? createdRoom : r));
             }
-        } catch (err) {
-            console.error("Failed to create room:", err);
-        }
+        }).catch(err => console.error("Failed to create room:", err));
     };
 
     const handleJoinRoom = (room: any) => {
@@ -541,21 +553,35 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
         scrollToBottom();
     }, [globalMessages, dmMessages]);
 
-    const handleSendMessage = async () => {
+    const handleSendMessage = () => {
         if (!messageInput.trim()) return;
         const out = messageInput;
         setMessageInput(""); // Clear immediately for UX
         
-        await fetch("/api/messages", {
+        // Optimistic UI Update for pure blazing fast UX
+        const optimisticMsg = {
+            id: Date.now().toString(),
+            user: "You",
+            time: "Just now",
+            message: out,
+            isMe: true,
+            isOnline: true,
+            isRead: false,
+            rawSender: null
+        };
+
+        if (chatMode === "global") setGlobalMessages(prev => [...prev, optimisticMsg]);
+        else setDmMessages(prev => [...prev, optimisticMsg]);
+        
+        // Fire database POST in the background without blocking the UI
+        fetch("/api/messages", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 content: out,
                 receiverId: chatMode === "dm" && selectedFriendForChat ? selectedFriendForChat.id : null
             })
-        });
-        
-        fetchMessages(); // instantly re-fetch
+        }).then(() => fetchMessages()); // quietly re-sync exact timestamps
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
