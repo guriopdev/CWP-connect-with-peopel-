@@ -66,6 +66,14 @@ export default function LandingPage() {
     const rotateX = useTransform(springY, [-0.5, 0.5], [5, -5]);
     const rotateY = useTransform(springX, [-0.5, 0.5], [-5, 5]);
 
+    // Parallax icon transforms (MUST be at top level, not inside JSX)
+    const iconX1 = useTransform(springX, [-0.5, 0.5], [-100, 100]);
+    const iconY1 = useTransform(springY, [-0.5, 0.5], [-100, 100]);
+    const iconX2 = useTransform(springX, [-0.5, 0.5], [80, -80]);
+    const iconY2 = useTransform(springY, [-0.5, 0.5], [150, -150]);
+    const iconX3 = useTransform(springX, [-0.5, 0.5], [120, -120]);
+    const iconY3 = useTransform(springY, [-0.5, 0.5], [-50, 50]);
+
     return (
         <div ref={containerRef} className="flex flex-col items-center bg-black text-white selection:bg-purple-500/30 overflow-x-hidden min-h-screen w-full">
             {!isVerified ? (
@@ -156,9 +164,9 @@ export default function LandingPage() {
 
                 {/* Mouse-Driven Parallax Elements */}
                 <div className="absolute inset-0 z-[-1] pointer-events-none hide-on-mobile">
-                    <motion.div style={{ x: useTransform(springX, [-0.5, 0.5], [-100, 100]), y: useTransform(springY, [-0.5, 0.5], [-100, 100]) }} className="absolute top-[15%] left-[5%] text-purple-500/10"><Cpu size={250} /></motion.div>
-                    <motion.div style={{ x: useTransform(springX, [-0.5, 0.5], [80, -80]), y: useTransform(springY, [-0.5, 0.5], [150, -150]) }} className="absolute bottom-[20%] right-[10%] text-indigo-500/10"><Layers size={300} /></motion.div>
-                    <motion.div style={{ x: useTransform(springX, [-0.5, 0.5], [120, -120]), y: useTransform(springY, [-0.5, 0.5], [-50, 50]) }} className="absolute top-[40%] right-[5%] text-purple-400/5"><MousePointer2 size={150} /></motion.div>
+                    <motion.div style={{ x: iconX1, y: iconY1 }} className="absolute top-[15%] left-[5%] text-purple-500/10"><Cpu size={250} /></motion.div>
+                    <motion.div style={{ x: iconX2, y: iconY2 }} className="absolute bottom-[20%] right-[10%] text-indigo-500/10"><Layers size={300} /></motion.div>
+                    <motion.div style={{ x: iconX3, y: iconY3 }} className="absolute top-[40%] right-[5%] text-purple-400/5"><MousePointer2 size={150} /></motion.div>
                 </div>
             </motion.section>
 
