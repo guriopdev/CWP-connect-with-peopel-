@@ -16,6 +16,8 @@ export default function LandingPage() {
     const router = useRouter();
     const containerRef = useRef(null);
     const [isVerified, setIsVerified] = useState(false);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [verifySuccess, setVerifySuccess] = useState(false);
 
     // Mouse tracking for parallax
     const mouseX = useMotionValue(0);
@@ -31,11 +33,6 @@ export default function LandingPage() {
     });
 
     useEffect(() => {
-        // Security Verification Simulation (Simulates Cloudflare's Under Attack Mode)
-        const securityCheck = setTimeout(() => {
-            setIsVerified(true);
-        }, 3000);
-
         const handleMouseMove = (e: MouseEvent) => {
             const { clientX, clientY } = e;
             const { innerWidth, innerHeight } = window;
@@ -44,11 +41,20 @@ export default function LandingPage() {
         };
 
         window.addEventListener("mousemove", handleMouseMove);
-        return () => {
-            window.removeEventListener("mousemove", handleMouseMove);
-            clearTimeout(securityCheck);
-        };
+        return () => window.removeEventListener("mousemove", handleMouseMove);
     }, [mouseX, mouseY]);
+
+    const handleVerification = () => {
+        if (isVerifying || verifySuccess) return;
+        setIsVerifying(true);
+        
+        // Simulate a complex cryptographic/browser integrity check
+        setTimeout(() => {
+            setIsVerifying(false);
+            setVerifySuccess(true);
+            setTimeout(() => setIsVerified(true), 800); // Wait briefly before dismissing overlay
+        }, 2000);
+    };
 
     const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
     const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
@@ -63,17 +69,24 @@ export default function LandingPage() {
     if (!isVerified) {
         return (
             <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ ease: "linear", duration: 2, repeat: Infinity }}
-                    className="w-16 h-16 border-4 border-white/5 border-t-purple-500 rounded-full mb-10 shadow-[0_0_30px_rgba(168,85,247,0.5)]"
-                />
-                <h2 className="text-3xl font-black uppercase tracking-tighter mb-4 italic">Verifying Connection</h2>
-                <p className="text-gray-500 font-bold max-w-sm tracking-widest text-xs uppercase leading-relaxed hidden sm:block">
-                    StudySync is checking the security of your connection before proceeding. This process is automatic.
-                </p>
-                <div className="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-700">
-                    <Shield size={14} /> Secured by Platform Shield
+                <div className="mb-10 p-8 glass-panel border border-white/10 rounded-2xl flex flex-col items-center gap-6 shadow-2xl min-w-[300px]">
+                    <div className="flex items-center justify-between w-full gap-8">
+                        <div 
+                            className={`w-8 h-8 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${verifySuccess ? "border-emerald-500 bg-emerald-500/20" : isVerifying ? "border-purple-500" : "border-gray-500 hover:border-purple-400"}`}
+                            onClick={handleVerification}
+                        >
+                            {isVerifying && (
+                                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, ease: "linear", duration: 1 }} className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full" />
+                            )}
+                            {verifySuccess && <CheckCircle size={18} className="text-emerald-500" />}
+                        </div>
+                        <span className="font-bold text-gray-300">Verify you are human</span>
+                        <Shield className="text-purple-500 opacity-50" size={24} />
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-700">
+                    Protected by StudySync Security
                 </div>
             </div>
         );
