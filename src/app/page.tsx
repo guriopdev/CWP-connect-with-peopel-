@@ -32,10 +32,7 @@ export default function LandingPage() {
     const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
     const springY = useSpring(mouseY, { stiffness: 50, damping: 20 });
 
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end end"]
-    });
+    const { scrollYProgress } = useScroll();
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -62,8 +59,8 @@ export default function LandingPage() {
         }, 2000);
     };
 
-    const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-    const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.9]);
+    const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+    const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.9]);
     const yParallax = useTransform(scrollYProgress, [0, 1], [0, -400]);
 
     // Mouse-based parallax transforms
