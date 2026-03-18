@@ -8,7 +8,7 @@ import Link from "next/link";
 import {
     LayoutDashboard, MessageSquare, LogOut,
     Search, Plus, Users, Lock, X, Sparkles,
-    Send, Shield, Bell, Moon, Settings, CheckCheck
+    Send, Shield, Bell, Moon, Settings, CheckCheck, Check
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import InteractiveBackground from "@/components/InteractiveBackground";
