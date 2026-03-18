@@ -13,10 +13,12 @@ import {
 import Navbar from "@/components/Navbar";
 import InteractiveBackground from "@/components/InteractiveBackground";
 
+import { Suspense } from "react";
+
 type View = "rooms" | "chat" | "settings";
 type ChatMode = "global" | "room" | "dm";
 
-export default function LobbyPage() {
+function LobbyContent() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -648,5 +650,13 @@ function SettingsCard({ icon, title, desc }: any) {
             <h3 className="text-2xl font-bold mb-2">{title}</h3>
             <p className="text-gray-500 font-medium text-sm leading-relaxed italic">{desc}</p>
         </div>
+    );
+}
+
+export default function LobbyPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black text-white flex items-center justify-center font-black uppercase tracking-widest text-2xl">Loading...</div>}>
+            <LobbyContent />
+        </Suspense>
     );
 }
