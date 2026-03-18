@@ -15,6 +15,7 @@ export default function LandingPage() {
     const { status } = useSession();
     const router = useRouter();
     const containerRef = useRef(null);
+    const [isVerified, setIsVerified] = useState(false);
 
     // Mouse tracking for parallax
     const mouseX = useMotionValue(0);
@@ -30,6 +31,11 @@ export default function LandingPage() {
     });
 
     useEffect(() => {
+        // Security Verification Simulation (Simulates Cloudflare's Under Attack Mode)
+        const securityCheck = setTimeout(() => {
+            setIsVerified(true);
+        }, 3000);
+
         const handleMouseMove = (e: MouseEvent) => {
             const { clientX, clientY } = e;
             const { innerWidth, innerHeight } = window;
@@ -38,7 +44,10 @@ export default function LandingPage() {
         };
 
         window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            clearTimeout(securityCheck);
+        };
     }, [mouseX, mouseY]);
 
     const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
@@ -50,6 +59,25 @@ export default function LandingPage() {
     const moveY = useTransform(springY, [-0.5, 0.5], [-30, 30]);
     const rotateX = useTransform(springY, [-0.5, 0.5], [5, -5]);
     const rotateY = useTransform(springX, [-0.5, 0.5], [-5, 5]);
+
+    if (!isVerified) {
+        return (
+            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ ease: "linear", duration: 2, repeat: Infinity }}
+                    className="w-16 h-16 border-4 border-white/5 border-t-purple-500 rounded-full mb-10 shadow-[0_0_30px_rgba(168,85,247,0.5)]"
+                />
+                <h2 className="text-3xl font-black uppercase tracking-tighter mb-4 italic">Verifying Connection</h2>
+                <p className="text-gray-500 font-bold max-w-sm tracking-widest text-xs uppercase leading-relaxed hidden sm:block">
+                    StudySync is checking the security of your connection before proceeding. This process is automatic.
+                </p>
+                <div className="mt-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-700">
+                    <Shield size={14} /> Secured by Platform Shield
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div ref={containerRef} className="flex flex-col items-center bg-black text-white selection:bg-purple-500/30 overflow-x-hidden">
