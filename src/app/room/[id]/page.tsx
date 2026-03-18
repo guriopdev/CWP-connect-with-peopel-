@@ -345,7 +345,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
             {/* ─── Jitsi Meet Video Conference ─── */}
             <div className="flex-1 relative z-10 bg-black">
                 <iframe
-                    src={`https://meet.ffmuc.net/CWP-StudyRoom-${id}#config.startWithAudioMuted=${isMuted}&config.startWithVideoMuted=${isVideoOff}&config.prejoinPageEnabled=false&config.disableDeepLinking=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.DEFAULT_BACKGROUND=%23000000&interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true`}
+                    src={`https://meet.ffmuc.net/CWP-StudyRoom-${id}#config.startWithAudioMuted=${isMuted}&config.startWithVideoMuted=${isVideoOff}&config.prejoinPageEnabled=false&config.disableDeepLinking=true&config.disableInviteFunctions=true&interfaceConfig.HIDE_INVITE_MORE_HEADER=true&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.DEFAULT_BACKGROUND=%23000000&interfaceConfig.DISABLE_JOIN_LEAVE_NOTIFICATIONS=true`}
                     allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
                     className="w-full h-full border-0"
                     style={{ background: "#000" }}

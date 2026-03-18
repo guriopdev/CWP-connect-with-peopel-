@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MessageSquare, MapPin, BookOpen, User } from "lucide-react";
+import { X, MessageSquare, MapPin, BookOpen, User, Flag } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function ProfileModal({ user, isOpen, onClose, onMessage }: { user: any, isOpen: boolean, onClose: () => void, onMessage?: () => void }) {
@@ -73,14 +73,24 @@ export default function ProfileModal({ user, isOpen, onClose, onMessage }: { use
                             </div>
                         </div>
 
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleMessage}
-                            className="w-full flex items-center justify-center gap-3 py-4 rounded-xl bg-purple-gradient text-white font-black text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(168,85,247,0.3)] transition-all"
-                        >
-                            <MessageSquare size={16} /> Send Message
-                        </motion.button>
+                        <div className="flex w-full items-center gap-3">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleMessage}
+                                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-xl bg-purple-gradient text-white font-black text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(168,85,247,0.3)] transition-all"
+                            >
+                                <MessageSquare size={16} /> Message
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="p-4 rounded-xl bg-red-500/10 text-red-400 font-black text-xs uppercase tracking-widest border border-red-500/20 hover:bg-red-500/20 transition-all flexitems-center"
+                                title="Report Profile"
+                            >
+                                <Flag size={18} />
+                            </motion.button>
+                        </div>
                     </div>
                 </motion.div>
             </div>

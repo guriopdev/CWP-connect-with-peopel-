@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
     LayoutDashboard, MessageSquare, LogOut,
-    Search, Plus, Users, Lock, X, Sparkles, ArrowLeft,
+    Search, Plus, Users, Lock, X, Sparkles, ArrowLeft, Flag,
     Send, Shield, Bell, Moon, Settings, CheckCheck, Check
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -487,7 +487,30 @@ function RoomCard({ room, onJoin, isOwner, onDelete }: { room: any; onJoin: () =
 function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setChatMode: (m: ChatMode) => void, friends: any[] }) {
     const [selectedUserForProfile, setSelectedUserForProfile] = useState<any>(null);
     const [selectedFriendForChat, setSelectedFriendForChat] = useState<any>(null);
+    const [globalMessages, setGlobalMessages] = useState<any[]>([]);
+    const [dmMessages, setDmMessages] = useState<any[]>([]);
+    const [messageInput, setMessageInput] = useState("");
     const router = useRouter();
+
+    const handleSendMessage = () => {
+        if (!messageInput.trim()) return;
+        const newMsg = {
+            id: Date.now(),
+            user: "You",
+            time: "Just now",
+            message: messageInput,
+            isMe: true,
+            isOnline: true,
+            isRead: false
+        };
+        if (chatMode === "global") setGlobalMessages([...globalMessages, newMsg]);
+        else setDmMessages([...dmMessages, newMsg]);
+        setMessageInput("");
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') handleSendMessage();
+    };
 
     useEffect(() => {
         if (chatMode !== "dm") {
@@ -545,17 +568,30 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
                 <div className="flex-1 space-y-6 overflow-y-auto mb-8 pr-4 custom-scrollbar">
                     {chatMode === "global" && (
                         <>
-                            <ChatMessage user="AI Assistant" time="Now" message="Welcome to the global network. You can click on any user's name to view their profile!" isMe={false} isOnline={true} onProfileClick={() => {}} />
-                            <ChatMessage user="You" time="Just now" message="Hello everyone!" isMe={true} isOnline={true} isRead={true} />
+                            {globalMessages.length === 0 && (
+                                <div className="h-full flex flex-col items-center justify-center text-center opacity-30 mt-10">
+                                    <MessageSquare size={40} className="mb-4" />
+                                    <p className="text-xs font-black uppercase tracking-widest">No messages yet. Say hello!</p>
+                                </div>
+                            )}
+                            {globalMessages.map(msg => (
+                                <ChatMessage key={msg.id} {...msg} onProfileClick={() => {}} />
+                            ))}
                         </>
                     )}
                     {chatMode === "dm" && (
                         <>
                             {selectedFriendForChat ? (
                                 <>
-                                    <ChatMessage user={selectedFriendForChat.name} time="10:30 AM" message="Hey, are we studying today?" isMe={false} isOnline={true} onProfileClick={() => setSelectedUserForProfile(selectedFriendForChat)} />
-                                    <ChatMessage user="You" time="10:32 AM" message="Yes! Join my room in 5 mins." isMe={true} isOnline={true} isRead={true} />
-                                    <ChatMessage user="You" time="10:45 AM" message="Ready?" isMe={true} isOnline={true} isRead={false} />
+                                    {dmMessages.length === 0 && (
+                                        <div className="h-full flex flex-col items-center justify-center text-center opacity-30 mt-10">
+                                            <MessageSquare size={40} className="mb-4" />
+                                            <p className="text-xs font-black uppercase tracking-widest">Start a conversation with {selectedFriendForChat.name}</p>
+                                        </div>
+                                    )}
+                                    {dmMessages.map(msg => (
+                                        <ChatMessage key={msg.id} {...msg} onProfileClick={() => {}} />
+                                    ))}
                                 </>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -587,12 +623,15 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
                 {(chatMode === "global" || (chatMode === "dm" && selectedFriendForChat)) && (
                     <div className="relative mt-auto">
                         <input
+                            value={messageInput}
+                            onChange={(e) => setMessageInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
                             placeholder={
                                 chatMode === "global" ? "Message global network..." : `Message ${selectedFriendForChat.name}...`
                             }
                             className="w-full pl-6 pr-16 py-5 rounded-2xl bg-white/5 border border-white/10 focus:border-purple-500/50 outline-none transition-all font-bold text-sm"
                         />
-                        <button className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-xl bg-purple-gradient text-white shadow-lg shadow-purple-500/20">
+                        <button onClick={handleSendMessage} className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-xl bg-purple-gradient text-white shadow-lg shadow-purple-500/20 hover:scale-110 transition-transform">
                             <Send size={20} />
                         </button>
                     </div>
@@ -617,14 +656,23 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
 
 function ChatMessage({ user, time, message, isMe, isOnline, isRead, onProfileClick }: any) {
     return (
-        <div className={`flex flex-col ${isMe ? "items-end text-right" : "items-start text-left"}`}>
+        <div className={`flex flex-col group/message ${isMe ? "items-end text-right" : "items-start text-left"}`}>
             <div className="flex items-center gap-2 mb-2 cursor-pointer group" onClick={onProfileClick}>
                 {!isMe && isOnline && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="Online" />}
                 <span className={`text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors ${!isMe ? "text-purple-400 group-hover:text-white" : "text-gray-400"}`}>{user}</span>
                 <span className="text-[9px] sm:text-[10px] font-bold text-gray-600">{time}</span>
             </div>
-            <div className={`px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm shadow-xl flex items-end gap-3 ${isMe ? "bg-purple-gradient text-white rounded-tr-none" : "bg-white/[0.05] border border-white/5 text-gray-200 rounded-tl-none"}`}>
+            
+            <div className={`relative px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm shadow-xl flex items-end gap-3 ${isMe ? "bg-purple-gradient text-white rounded-tr-none" : "bg-white/[0.05] border border-white/5 text-gray-200 rounded-tl-none"}`}>
                 <span>{message}</span>
+                
+                {/* Report Message Action */}
+                {!isMe && (
+                    <button className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover/message:opacity-100 p-2 text-gray-500 hover:text-red-400 transition-all" title="Report message">
+                        <Flag size={14} />
+                    </button>
+                )}
+                
                 {isMe && (
                     <span className="opacity-70 mb-0.5" title={isRead ? "Read" : "Sent"}>
                         {isRead ? (
