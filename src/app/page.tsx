@@ -66,50 +66,48 @@ export default function LandingPage() {
     const rotateX = useTransform(springY, [-0.5, 0.5], [5, -5]);
     const rotateY = useTransform(springX, [-0.5, 0.5], [-5, 5]);
 
-    if (!isVerified) {
-        return (
-            <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
-                <div className="mb-10 p-8 glass-panel border border-white/10 rounded-2xl flex flex-col items-center gap-6 shadow-2xl min-w-[300px]">
-                    <div className="flex items-center justify-between w-full gap-8">
-                        <div 
-                            className={`w-8 h-8 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${verifySuccess ? "border-emerald-500 bg-emerald-500/20" : isVerifying ? "border-purple-500" : "border-gray-500 hover:border-purple-400"}`}
-                            onClick={handleVerification}
-                        >
-                            {isVerifying && (
-                                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, ease: "linear", duration: 1 }} className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full" />
-                            )}
-                            {verifySuccess && <CheckCircle size={18} className="text-emerald-500" />}
+    return (
+        <div ref={containerRef} className="flex flex-col items-center bg-black text-white selection:bg-purple-500/30 overflow-x-hidden min-h-screen w-full">
+            {!isVerified ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center w-full h-screen">
+                    <div className="mb-10 p-8 glass-panel border border-white/10 rounded-2xl flex flex-col items-center gap-6 shadow-2xl min-w-[300px]">
+                        <div className="flex items-center justify-between w-full gap-8">
+                            <div 
+                                className={`w-8 h-8 rounded border-2 flex items-center justify-center cursor-pointer transition-all ${verifySuccess ? "border-emerald-500 bg-emerald-500/20" : isVerifying ? "border-purple-500" : "border-gray-500 hover:border-purple-400"}`}
+                                onClick={handleVerification}
+                            >
+                                {isVerifying && (
+                                    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, ease: "linear", duration: 1 }} className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full" />
+                                )}
+                                {verifySuccess && <CheckCircle size={18} className="text-emerald-500" />}
+                            </div>
+                            <span className="font-bold text-gray-300">Verify you are human</span>
+                            <Shield className="text-purple-500 opacity-50" size={24} />
                         </div>
-                        <span className="font-bold text-gray-300">Verify you are human</span>
-                        <Shield className="text-purple-500 opacity-50" size={24} />
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-700">
+                        Protected by StudySync Security
                     </div>
                 </div>
+            ) : (
+                <>
+                    <Navbar />
 
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-700">
-                    Protected by StudySync Security
-                </div>
-            </div>
-        );
-    }
+                    {/* Dynamic Interactive Background */}
+                    <InteractiveBackground />
 
-    return (
-        <div ref={containerRef} className="flex flex-col items-center bg-black text-white selection:bg-purple-500/30 overflow-x-hidden">
-            <Navbar />
-
-            {/* Dynamic Interactive Background */}
-            <InteractiveBackground />
-
-            {/* Hero Section */}
-            <motion.section
-                style={{ opacity: heroOpacity, scale: heroScale, rotateX, rotateY }}
-                className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center px-4 perspective-1000"
-            >
-                <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-                    className="text-center max-w-6xl"
-                >
+                    {/* Hero Section */}
+                    <motion.section
+                        style={{ opacity: heroOpacity, scale: heroScale, rotateX, rotateY }}
+                        className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center px-4 perspective-1000"
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                            className="text-center max-w-6xl"
+                        >
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -297,6 +295,8 @@ export default function LandingPage() {
                     </div>
                 </div>
             </footer>
+                </>
+            )}
         </div>
     );
 }
