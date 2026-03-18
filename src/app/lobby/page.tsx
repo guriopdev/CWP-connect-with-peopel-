@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -261,7 +261,7 @@ function LobbyContent() {
                         </motion.div>
                     )}
 
-                    {activeTab === "chat" && <ChatView chatMode={chatMode} setChatMode={setChatMode} friends={friends} />}
+                    {activeTab === "chat" && <ChatView chatMode={chatMode} setChatMode={setChatMode} friends={friends} currentUserId={currentUserId} />}
                     {activeTab === "settings" && <SettingsView />}
                 </AnimatePresence>
             </main>
@@ -484,28 +484,78 @@ function RoomCard({ room, onJoin, isOwner, onDelete }: { room: any; onJoin: () =
     );
 }
 
-function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setChatMode: (m: ChatMode) => void, friends: any[] }) {
+function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode: ChatMode, setChatMode: (m: ChatMode) => void, friends: any[], currentUserId: string | null }) {
     const [selectedUserForProfile, setSelectedUserForProfile] = useState<any>(null);
     const [selectedFriendForChat, setSelectedFriendForChat] = useState<any>(null);
     const [globalMessages, setGlobalMessages] = useState<any[]>([]);
     const [dmMessages, setDmMessages] = useState<any[]>([]);
     const [messageInput, setMessageInput] = useState("");
     const router = useRouter();
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const handleSendMessage = () => {
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const fetchMessages = async () => {
+        if (chatMode === "global") {
+            const res = await fetch("/api/messages?mode=global");
+            if (res.ok) {
+                const data = await res.json();
+                setGlobalMessages(data.map((m: any) => ({
+                    id: m.id,
+                    user: m.sender.name || "User",
+                    time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    message: m.content,
+                    isMe: m.senderId === currentUserId,
+                    isOnline: true,
+                    isRead: false,
+                    rawSender: m.sender
+                })));
+            }
+        } else if (chatMode === "dm" && selectedFriendForChat) {
+            const res = await fetch(`/api/messages?mode=dm&userId=${selectedFriendForChat.id}`);
+            if (res.ok) {
+                const data = await res.json();
+                setDmMessages(data.map((m: any) => ({
+                    id: m.id,
+                    user: m.sender.name || "User",
+                    time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    message: m.content,
+                    isMe: m.senderId === currentUserId,
+                    isOnline: true,
+                    isRead: false,
+                    rawSender: m.sender
+                })));
+            }
+        }
+    };
+
+    useEffect(() => {
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 2000);
+        return () => clearInterval(interval);
+    }, [chatMode, selectedFriendForChat, currentUserId]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [globalMessages, dmMessages]);
+
+    const handleSendMessage = async () => {
         if (!messageInput.trim()) return;
-        const newMsg = {
-            id: Date.now(),
-            user: "You",
-            time: "Just now",
-            message: messageInput,
-            isMe: true,
-            isOnline: true,
-            isRead: false
-        };
-        if (chatMode === "global") setGlobalMessages([...globalMessages, newMsg]);
-        else setDmMessages([...dmMessages, newMsg]);
-        setMessageInput("");
+        const out = messageInput;
+        setMessageInput(""); // Clear immediately for UX
+        
+        await fetch("/api/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                content: out,
+                receiverId: chatMode === "dm" && selectedFriendForChat ? selectedFriendForChat.id : null
+            })
+        });
+        
+        fetchMessages(); // instantly re-fetch
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -575,8 +625,9 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
                                 </div>
                             )}
                             {globalMessages.map(msg => (
-                                <ChatMessage key={msg.id} {...msg} onProfileClick={() => {}} />
+                                <ChatMessage key={msg.id} {...msg} onProfileClick={() => !msg.isMe && setSelectedUserForProfile(msg.rawSender)} />
                             ))}
+                            <div ref={messagesEndRef} />
                         </>
                     )}
                     {chatMode === "dm" && (
@@ -590,8 +641,9 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
                                         </div>
                                     )}
                                     {dmMessages.map(msg => (
-                                        <ChatMessage key={msg.id} {...msg} onProfileClick={() => {}} />
+                                        <ChatMessage key={msg.id} {...msg} onProfileClick={() => !msg.isMe && setSelectedUserForProfile(msg.rawSender)} />
                                     ))}
+                                    <div ref={messagesEndRef} />
                                 </>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
