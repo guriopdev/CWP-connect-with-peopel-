@@ -145,10 +145,21 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         };
     }, [hasEntered, currentUserId, id]);
 
-    const sendFriendRequest = (participantId: string) => {
-        setActiveParticipants(prev => prev.map(p =>
-            p.id === participantId ? { ...p, requestSent: true } : p
-        ));
+    const sendFriendRequest = async (participantId: string) => {
+        try {
+            const res = await fetch("/api/friends", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ receiverId: participantId }),
+            });
+            if (res.ok || res.status === 409) {
+                setActiveParticipants(prev => prev.map(p =>
+                    p.id === participantId ? { ...p, requestSent: true } : p
+                ));
+            }
+        } catch (err) {
+            console.error("Failed to send friend request:", err);
+        }
     };
 
     if (!hasEntered) {

@@ -33,6 +33,11 @@ export default function LobbyPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [rooms, setRooms] = useState<any[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetch("/api/user/profile").then(r => r.json()).then(d => { if (d?.id) setCurrentUserId(d.id); }).catch(() => {});
+    }, []);
 
     const [newRoom, setNewRoom] = useState({ name: "", subject: "General", isLocked: false, password: "" });
     const [protectedRoom, setProtectedRoom] = useState<any>(null);
@@ -204,7 +209,16 @@ export default function LobbyPage() {
                                     </div>
                                 ) : (
                                     rooms.map((room) => (
-                                        <RoomCard key={room.id} room={room} onJoin={() => handleJoinRoom(room)} />
+                                        <RoomCard
+                                            key={room.id}
+                                            room={room}
+                                            onJoin={() => handleJoinRoom(room)}
+                                            isOwner={room.adminId === currentUserId || room.admin === session?.user?.username || room.admin === session?.user?.name}
+                                            onDelete={async () => {
+                                                const res = await fetch(`/api/rooms/delete?roomId=${room.id}`, { method: "DELETE" });
+                                                if (res.ok) setRooms(rooms.filter(r => r.id !== room.id));
+                                            }}
+                                        />
                                     ))
                                 )}
                                 <motion.div
@@ -389,52 +403,57 @@ function SidebarIcon({ icon, active = false, onClick, className = "", label }: {
     );
 }
 
-function RoomCard({ room, onJoin }: { room: any, onJoin: () => void }) {
+function RoomCard({ room, onJoin, isOwner, onDelete }: { room: any; onJoin: () => void; isOwner?: boolean; onDelete?: () => void }) {
     return (
         <motion.div
-            whileHover={{ y: -20, rotateY: 5, rotateX: -5 }}
-            className="p-12 rounded-[4rem] glass-panel border border-white/5 hover:border-purple-500/40 transition-all relative group flex flex-col justify-between min-h-[480px] shadow-3xl perspective-1000 overflow-hidden"
+            whileHover={{ y: -10 }}
+            className="p-6 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] md:rounded-[4rem] glass-panel border border-white/5 hover:border-purple-500/40 transition-all relative group flex flex-col justify-between min-h-[280px] sm:min-h-[360px] md:min-h-[480px] shadow-3xl overflow-hidden"
         >
-            <div className="absolute top-0 right-0 p-10 opacity-0 group-hover:opacity-100 transition-all duration-700">
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: "linear" }}>
-                    <Sparkles className="text-purple-500/10" size={120} />
-                </motion.div>
-            </div>
-
             <div className="relative z-10">
-                <div className="flex justify-between items-start mb-10">
-                    <div className="px-6 py-2.5 rounded-2xl bg-white/5 text-[11px] font-black uppercase tracking-[0.3em] text-purple-400 border border-white/10 group-hover:bg-purple-500/10 transition-all duration-500">
+                <div className="flex justify-between items-start mb-4 sm:mb-6 md:mb-10">
+                    <div className="px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-lg sm:rounded-2xl bg-white/5 text-[9px] sm:text-[11px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-purple-400 border border-white/10">
                         {room.subject}
                     </div>
-                    {room.isLocked && (
-                        <div className="p-4 rounded-full bg-white/[0.02] border border-white/10 shadow-inner group-hover:border-purple-500/30 transition-colors">
-                            <Lock size={22} className="text-purple-500/50" />
-                        </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {room.isLocked && (
+                            <div className="p-2 sm:p-4 rounded-full bg-white/[0.02] border border-white/10">
+                                <Lock size={16} className="text-purple-500/50 sm:w-[22px] sm:h-[22px]" />
+                            </div>
+                        )}
+                        {isOwner && (
+                            <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+                                className="p-2 sm:p-3 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all"
+                                title="Delete Room"
+                            >
+                                <X size={16} />
+                            </motion.button>
+                        )}
+                    </div>
                 </div>
-                <h3 className="text-5xl font-black mb-6 italic tracking-tighter leading-[0.9] group-hover:text-white transition-colors uppercase">{room.name}</h3>
-                <p className="text-gray-500 text-xl mb-12 font-medium italic">Host: <span className="text-purple-300 not-italic font-black tracking-tight uppercase">{room.admin}</span></p>
+                <h3 className="text-xl sm:text-3xl md:text-5xl font-black mb-3 sm:mb-6 italic tracking-tighter leading-tight group-hover:text-white transition-colors uppercase">{room.name}</h3>
+                <p className="text-gray-500 text-sm sm:text-lg md:text-xl mb-6 sm:mb-12 font-medium italic">Host: <span className="text-purple-300 not-italic font-black tracking-tight uppercase">{room.admin}</span></p>
             </div>
 
-            <div className="flex items-center justify-between pt-10 border-t border-white/5 relative z-10">
-                <div className="flex items-center gap-4 text-gray-500 font-black text-xs tracking-widest uppercase">
-                    <Users size={24} className="text-purple-500/30" />
+            <div className="flex items-center justify-between pt-4 sm:pt-6 md:pt-10 border-t border-white/5 relative z-10">
+                <div className="flex items-center gap-2 sm:gap-4 text-gray-500 font-black text-[10px] sm:text-xs tracking-widest uppercase">
+                    <Users size={18} className="text-purple-500/30 sm:w-6 sm:h-6" />
                     <span className="flex flex-col">
-                        <span className="text-white text-lg tracking-normal">{room.users}</span>
-                        <span className="text-[10px] text-gray-700">ONLINE</span>
+                        <span className="text-white text-base sm:text-lg tracking-normal">{room.users}</span>
+                        <span className="text-[8px] sm:text-[10px] text-gray-700">ONLINE</span>
                     </span>
                 </div>
                 <motion.button
-                    whileHover={{ scale: 1.05, boxShadow: "0 15px 30px rgba(168,85,247,0.3)" }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={onJoin}
-                    className="px-10 py-4 rounded-2xl bg-white text-black font-black text-xs hover:bg-purple-gradient hover:text-white transition-all uppercase tracking-[0.2em] shadow-2xl"
+                    className="px-5 sm:px-10 py-2.5 sm:py-4 rounded-xl sm:rounded-2xl bg-white text-black font-black text-[10px] sm:text-xs hover:bg-purple-gradient hover:text-white transition-all uppercase tracking-[0.15em] sm:tracking-[0.2em] shadow-xl"
                 >
                     Join
                 </motion.button>
             </div>
-
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-purple-500/0 group-hover:bg-purple-500/20 transition-all" />
         </motion.div>
     );
 }

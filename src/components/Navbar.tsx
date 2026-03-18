@@ -14,6 +14,7 @@ export default function Navbar() {
 
     const navLinks = [
         { name: "Lobby", href: "/lobby" },
+        { name: "Friends", href: "/friends" },
         { name: "To-Do", href: "/todo" },
         { name: "Pomodoro", href: "/pomodoro" },
         { name: "AI Bot", href: "/ai-bot" },

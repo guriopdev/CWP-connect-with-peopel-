@@ -24,6 +24,7 @@ export async function GET() {
             subject: room.subject,
             isLocked: room.isLocked,
             admin: room.admin.username || room.admin.name || "Unknown",
+            adminId: room.adminId,
             users: room._count.participants,
             createdAt: room.createdAt,
         }));
