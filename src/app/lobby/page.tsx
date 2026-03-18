@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
     LayoutDashboard, MessageSquare, LogOut,
     Search, Plus, Users, Lock, X, Sparkles,
-    Send, Shield, Bell, Moon, Settings
+    Send, Shield, Bell, Moon, Settings, CheckCheck
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import InteractiveBackground from "@/components/InteractiveBackground";
@@ -19,7 +19,8 @@ type ChatMode = "global" | "room" | "dm";
 export default function LobbyPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
-
+    const searchParams = useSearchParams();
+    
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push("/auth/login");
@@ -28,12 +29,23 @@ export default function LobbyPage() {
         }
     }, [session, status, router]);
 
-    const [activeTab, setActiveTab] = useState<View>("rooms");
-    const [chatMode, setChatMode] = useState<ChatMode>("global");
+    const initialChatMode = (searchParams.get("chatMode") as ChatMode) || "global";
+    const initialView = searchParams.has("chatMode") ? "chat" : "rooms";
+
+    const [activeTab, setActiveTab] = useState<View>(initialView);
+    const [chatMode, setChatMode] = useState<ChatMode>(initialChatMode);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [rooms, setRooms] = useState<any[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const mode = searchParams.get("chatMode");
+        if (mode) {
+            setActiveTab("chat");
+            setChatMode(mode as ChatMode);
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         fetch("/api/user/profile").then(r => r.json()).then(d => { if (d?.id) setCurrentUserId(d.id); }).catch(() => {});
@@ -459,11 +471,13 @@ function RoomCard({ room, onJoin, isOwner, onDelete }: { room: any; onJoin: () =
 }
 
 function ChatView({ chatMode, setChatMode }: { chatMode: ChatMode, setChatMode: (m: ChatMode) => void }) {
+    const [showOnlineList, setShowOnlineList] = useState(false);
+
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="h-[calc(100vh-250px)] flex flex-col glass-panel rounded-[3rem] overflow-hidden border border-white/5"
+            className="h-[calc(100vh-250px)] flex flex-col glass-panel rounded-[3rem] overflow-hidden border border-white/5 relative"
         >
             <div className="flex border-b border-white/5 bg-white/[0.02]">
                 <button
@@ -489,25 +503,34 @@ function ChatView({ chatMode, setChatMode }: { chatMode: ChatMode, setChatMode: 
                 </button>
             </div>
 
-            <div className="flex-1 p-8 md:p-12 flex flex-col min-h-0">
-                <header className="mb-8">
-                    <h2 className="text-3xl font-black uppercase tracking-tighter">
-                        {chatMode === "global" ? "Global Network" : chatMode === "room" ? "Room Discussion" : "Direct Messages"}
-                    </h2>
-                    <p className="text-gray-500 font-medium italic text-sm">
-                        {chatMode === "global" && "Synced with everyone in the StudySync community."}
-                        {chatMode === "room" && "Active discussion for your current study session."}
-                        {chatMode === "dm" && "Your private 1-on-1 conversations."}
-                    </p>
+            <div className="flex-1 p-8 md:p-12 flex flex-col min-h-0 relative">
+                <header className="mb-8 flex justify-between items-start">
+                    <div>
+                        <h2 className="text-3xl font-black uppercase tracking-tighter">
+                            {chatMode === "global" ? "Global Network" : chatMode === "room" ? "Room Discussion" : "Direct Messages"}
+                        </h2>
+                        <p className="text-gray-500 font-medium italic text-sm">
+                            {chatMode === "global" && "Synced with everyone in the StudySync community."}
+                            {chatMode === "room" && "Active discussion for your current study session."}
+                            {chatMode === "dm" && "Your private 1-on-1 conversations."}
+                        </p>
+                    </div>
+                    {chatMode === "dm" && (
+                        <button 
+                            onClick={() => setShowOnlineList(!showOnlineList)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${showOnlineList ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "bg-white/5 text-gray-400 border border-white/10 hover:text-white"}`}
+                        >
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Online Friends
+                        </button>
+                    )}
                 </header>
 
                 <div className="flex-1 space-y-6 overflow-y-auto mb-8 pr-4 custom-scrollbar">
                     {chatMode === "global" && (
                         <>
-                            <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
-                                <MessageSquare size={40} className="mb-4" />
-                                <p className="text-xs font-black uppercase tracking-widest">No global messages yet</p>
-                            </div>
+                            <ChatMessage user="AI Assistant" time="Now" message="Welcome to the global network. Be respectful." isMe={false} isOnline={true} />
+                            <ChatMessage user="You" time="Just now" message="Hello everyone!" isMe={true} isOnline={true} isRead={true} />
                         </>
                     )}
                     {chatMode === "room" && (
@@ -517,10 +540,28 @@ function ChatView({ chatMode, setChatMode }: { chatMode: ChatMode, setChatMode: 
                         </div>
                     )}
                     {chatMode === "dm" && (
-                        <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
-                            <MessageSquare size={40} className="mb-4" />
-                            <p className="text-xs font-black uppercase tracking-widest">Select a friend to start a DM</p>
-                        </div>
+                        <>
+                            {!showOnlineList ? (
+                                <>
+                                    <ChatMessage user="Friend" time="10:30 AM" message="Hey, are we studying today?" isMe={false} isOnline={true} />
+                                    <ChatMessage user="You" time="10:32 AM" message="Yes! Join my room in 5 mins." isMe={true} isOnline={true} isRead={true} />
+                                    <ChatMessage user="You" time="10:45 AM" message="Ready?" isMe={true} isOnline={true} isRead={false} />
+                                </>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between cursor-pointer hover:border-purple-500/30 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative">
+                                                <div className="w-10 h-10 rounded-full bg-purple-gradient"></div>
+                                                <span className="absolute bottom-0 right-0 w-3 h-3 border-2 border-black rounded-full bg-emerald-500"></span>
+                                            </div>
+                                            <span className="font-bold text-sm">Demo Friend</span>
+                                        </div>
+                                        <MessageSquare size={16} className="text-gray-500" />
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
@@ -528,7 +569,7 @@ function ChatView({ chatMode, setChatMode }: { chatMode: ChatMode, setChatMode: 
                     <input
                         placeholder={
                             chatMode === "global" ? "Message global network..." :
-                                chatMode === "room" ? "Message room..." : "Search friends..."
+                                chatMode === "room" ? "Message room..." : "Type your message..."
                         }
                         className="w-full pl-6 pr-16 py-5 rounded-2xl bg-white/5 border border-white/10 focus:border-purple-500/50 outline-none transition-all font-bold text-sm"
                     />
@@ -541,15 +582,25 @@ function ChatView({ chatMode, setChatMode }: { chatMode: ChatMode, setChatMode: 
     );
 }
 
-function ChatMessage({ user, time, message, isMe }: any) {
+function ChatMessage({ user, time, message, isMe, isOnline, isRead }: any) {
     return (
         <div className={`flex flex-col ${isMe ? "items-end text-right" : "items-start text-left"}`}>
             <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-black uppercase text-purple-400 tracking-widest">{user}</span>
-                <span className="text-[10px] font-bold text-gray-600">{time}</span>
+                {!isMe && isOnline && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="Online" />}
+                <span className="text-[10px] sm:text-xs font-black uppercase text-purple-400 tracking-widest">{user}</span>
+                <span className="text-[9px] sm:text-[10px] font-bold text-gray-600">{time}</span>
             </div>
-            <div className={`px-6 py-3 rounded-2xl font-bold ${isMe ? "bg-purple-gradient text-white rounded-tr-none" : "bg-white/5 text-gray-300 rounded-tl-none"}`}>
-                {message}
+            <div className={`px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm shadow-xl flex items-end gap-3 ${isMe ? "bg-purple-gradient text-white rounded-tr-none" : "bg-white/[0.05] border border-white/5 text-gray-200 rounded-tl-none"}`}>
+                <span>{message}</span>
+                {isMe && (
+                    <span className="opacity-70 mb-0.5" title={isRead ? "Read" : "Sent"}>
+                        {isRead ? (
+                            <CheckCheck size={14} className="text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,153,0.8)]" />
+                        ) : (
+                            <Check size={14} className="text-gray-300" />
+                        )}
+                    </span>
+                )}
             </div>
         </div>
     );

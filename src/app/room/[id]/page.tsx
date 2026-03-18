@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import InteractiveBackground from "@/components/InteractiveBackground";
+import ProfileModal from "@/components/ProfileModal";
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -19,6 +20,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     const [isVideoOff, setIsVideoOff] = useState(false);
     const [hasEntered, setHasEntered] = useState(false);
     const [isParticipantsListOpen, setIsParticipantsListOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<any>(null);
 
     // Media Stream Handling (preview only, before entering)
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -110,6 +112,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                         color: COLORS[i % COLORS.length],
                         requestSent: false,
                         image: p.user.image || null,
+                        bio: p.user.bio,
+                        country: p.user.country,
+                        education: p.user.education,
                     }));
                     setActiveParticipants(mapped);
                 }
@@ -283,15 +288,15 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                                         ) : (
                                             activeParticipants.map(p => (
                                                 <div key={p.id} className="flex items-center justify-between gap-2">
-                                                    <div className="flex items-center gap-2 sm:gap-3">
-                                                        <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg ${p.color} border border-white/10 flex items-center justify-center text-[9px] sm:text-xs font-black italic overflow-hidden`}>
+                                                    <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={() => !p.isMe && setSelectedUser(p)}>
+                                                        <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg ${p.color} border border-white/10 flex items-center justify-center text-[9px] sm:text-xs font-black italic overflow-hidden shadow-lg group-hover:scale-110 transition-transform`}>
                                                             {p.image ? (
                                                                 <img src={p.image} alt="" className="w-full h-full object-cover" />
                                                             ) : (
                                                                 p.name[0]
                                                             )}
                                                         </div>
-                                                        <span className="text-[9px] sm:text-[11px] font-black italic uppercase tracking-tight truncate max-w-[80px] sm:max-w-[120px]">{p.name} {p.isMe && "(You)"}</span>
+                                                        <span className="text-[9px] sm:text-[11px] font-black italic uppercase tracking-tight truncate max-w-[80px] sm:max-w-[120px] group-hover:text-purple-400 transition-colors">{p.name} {p.isMe && "(You)"}</span>
                                                     </div>
                                                     {!p.isMe && (
                                                         <motion.button
@@ -310,6 +315,12 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                        <ProfileModal 
+                            user={selectedUser} 
+                            isOpen={!!selectedUser} 
+                            onClose={() => setSelectedUser(null)} 
+                            onMessage={selectedUser ? () => router.push(`/lobby?chatMode=dm&chatUser=${selectedUser.id}`) : undefined}
+                        />
                     </div>
                 </div>
 

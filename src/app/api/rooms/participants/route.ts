@@ -74,6 +74,18 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: true });
         }
 
+        // Ensure the room exists first to avoid FK constraint violations
+        const room = await prisma.room.findUnique({ where: { id: roomId } });
+        if (!room && action !== "leave") {
+            await prisma.room.create({
+                data: {
+                    id: roomId,
+                    name: `Room ${roomId.substring(0, 8).toUpperCase()}`,
+                    adminId: session.user.id,
+                }
+            });
+        }
+
         // Default: join
         const existing = await prisma.roomParticipant.findUnique({
             where: { roomId_userId: { roomId, userId: session.user.id } },

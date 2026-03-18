@@ -13,13 +13,13 @@ export async function GET() {
 
         const sent = await prisma.friendRequest.findMany({
             where: { senderId: session.user.id },
-            include: { receiver: { select: { id: true, name: true, username: true, image: true } } },
+            include: { receiver: { select: { id: true, name: true, username: true, image: true, bio: true, country: true, education: true } } },
             orderBy: { createdAt: "desc" },
         });
 
         const received = await prisma.friendRequest.findMany({
             where: { receiverId: session.user.id },
-            include: { sender: { select: { id: true, name: true, username: true, image: true } } },
+            include: { sender: { select: { id: true, name: true, username: true, image: true, bio: true, country: true, education: true } } },
             orderBy: { createdAt: "desc" },
         });
 

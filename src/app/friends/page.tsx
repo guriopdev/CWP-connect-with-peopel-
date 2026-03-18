@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { UserPlus, UserCheck, UserX, Users, Clock, Check, X } from "lucide-react";
+import { UserPlus, UserCheck, UserX, Users, Clock, Check, X, MessageSquare } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import InteractiveBackground from "@/components/InteractiveBackground";
+import ProfileModal from "@/components/ProfileModal";
 
 type Tab = "received" | "sent" | "friends";
 
@@ -17,6 +18,7 @@ export default function FriendsPage() {
     const [sent, setSent] = useState<any[]>([]);
     const [received, setReceived] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedUser, setSelectedUser] = useState<any>(null);
 
     useEffect(() => {
         if (status === "unauthenticated") router.push("/auth/login");
@@ -132,6 +134,7 @@ export default function FriendsPage() {
                                                 type="received"
                                                 onAccept={() => handleAction(req.id, "accept")}
                                                 onReject={() => handleAction(req.id, "reject")}
+                                                onProfileClick={() => setSelectedUser(req.sender)}
                                             />
                                         ))
                                     )}
@@ -144,7 +147,12 @@ export default function FriendsPage() {
                                         <EmptyState icon={<Clock size={48} />} text="No sent requests" />
                                     ) : (
                                         pendingSent.map((req) => (
-                                            <RequestCard key={req.id} user={req.receiver} type="sent" />
+                                            <RequestCard
+                                                key={req.id}
+                                                user={req.receiver} 
+                                                type="sent" 
+                                                onProfileClick={() => setSelectedUser(req.receiver)}
+                                            />
                                         ))
                                     )}
                                 </div>
@@ -156,7 +164,13 @@ export default function FriendsPage() {
                                         <EmptyState icon={<Users size={48} />} text="No friends yet. Join a room and send requests!" />
                                     ) : (
                                         acceptedFriends.map((friend) => (
-                                            <RequestCard key={friend.id} user={friend} type="friend" />
+                                            <RequestCard 
+                                                key={friend.id} 
+                                                user={friend} 
+                                                type="friend" 
+                                                onProfileClick={() => setSelectedUser(friend)}
+                                                onMessage={() => router.push(`/lobby?chatMode=dm&chatUser=${friend.id}`)}
+                                            />
                                         ))
                                     )}
                                 </div>
@@ -164,24 +178,36 @@ export default function FriendsPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
+                
+                <ProfileModal 
+                    user={selectedUser} 
+                    isOpen={!!selectedUser} 
+                    onClose={() => setSelectedUser(null)} 
+                    onMessage={selectedUser && activeTab === "friends" ? () => router.push(`/lobby?chatMode=dm&chatUser=${selectedUser.id}`) : undefined}
+                />
             </main>
         </div>
     );
 }
 
-function RequestCard({ user, type, onAccept, onReject }: {
+function RequestCard({ user, type, onAccept, onReject, onProfileClick, onMessage }: {
     user: any;
     type: "received" | "sent" | "friend";
     onAccept?: () => void;
     onReject?: () => void;
+    onProfileClick?: () => void;
+    onMessage?: () => void;
 }) {
     return (
         <motion.div
             layout
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 sm:p-8 rounded-2xl sm:rounded-[2.5rem] glass-panel border border-white/5 hover:border-purple-500/20 transition-all"
         >
-            <div className="flex items-center gap-4 sm:gap-6">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-purple-gradient flex items-center justify-center text-lg sm:text-xl font-black italic flex-shrink-0">
+            <div 
+                className="flex items-center gap-4 sm:gap-6 cursor-pointer group"
+                onClick={onProfileClick}
+            >
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-purple-gradient flex items-center justify-center text-lg sm:text-xl font-black italic flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20">
                     {user.image ? (
                         <img src={user.image} alt="" className="w-full h-full object-cover rounded-xl sm:rounded-2xl" />
                     ) : (
@@ -189,7 +215,7 @@ function RequestCard({ user, type, onAccept, onReject }: {
                     )}
                 </div>
                 <div>
-                    <p className="font-black text-sm sm:text-lg">{user.name || "User"}</p>
+                    <p className="font-black text-sm sm:text-lg group-hover:text-purple-400 transition-colors">{user.name || "User"}</p>
                     <p className="text-[10px] sm:text-xs text-gray-500 font-bold">
                         {user.username ? `@${user.username}` : user.email || ""}
                     </p>
@@ -223,9 +249,19 @@ function RequestCard({ user, type, onAccept, onReject }: {
                     </span>
                 )}
                 {type === "friend" && (
-                    <span className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl bg-emerald-500/10 text-emerald-400 font-black text-[10px] sm:text-xs uppercase tracking-widest border border-emerald-500/20">
-                        <UserCheck size={14} className="inline mr-2" /> Friends
-                    </span>
+                    <>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={onMessage}
+                            className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-xl bg-white/5 text-purple-400 font-black text-[10px] sm:text-xs uppercase tracking-widest border border-purple-500/20 hover:bg-purple-500/10 transition-all"
+                        >
+                            <MessageSquare size={14} /> Message
+                        </motion.button>
+                        <span className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl bg-emerald-500/10 text-emerald-400 font-black text-[10px] sm:text-xs uppercase tracking-widest border border-emerald-500/20">
+                            <UserCheck size={14} className="inline mr-2" /> Friends
+                        </span>
+                    </>
                 )}
             </div>
         </motion.div>
