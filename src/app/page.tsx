@@ -15,7 +15,12 @@ export default function LandingPage() {
     const { status } = useSession();
     const router = useRouter();
     const containerRef = useRef(null);
-    const [isVerified, setIsVerified] = useState(false);
+    const [isVerified, setIsVerified] = useState(() => {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem("cwp_verified") === "true";
+        }
+        return false;
+    });
     const [isVerifying, setIsVerifying] = useState(false);
     const [verifySuccess, setVerifySuccess] = useState(false);
 
@@ -52,7 +57,8 @@ export default function LandingPage() {
         setTimeout(() => {
             setIsVerifying(false);
             setVerifySuccess(true);
-            setTimeout(() => setIsVerified(true), 800); // Wait briefly before dismissing overlay
+            localStorage.setItem("cwp_verified", "true");
+            setTimeout(() => setIsVerified(true), 800);
         }, 2000);
     };
 

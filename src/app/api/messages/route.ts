@@ -5,32 +5,28 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
-
         const { searchParams } = new URL(req.url);
         const mode = searchParams.get("mode");
-        const userId2 = searchParams.get("userId"); // for dm
+        const userId2 = searchParams.get("userId");
+        const senderId = searchParams.get("senderId");
 
         if (mode === "global") {
             const messages = await prisma.message.findMany({
                 where: { receiverId: null },
-                include: { sender: true },
+                include: { sender: { select: { id: true, name: true, image: true, username: true } } },
                 orderBy: { createdAt: "asc" },
                 take: 50,
             });
             return NextResponse.json(messages);
-        } else if (mode === "dm" && userId2) {
+        } else if (mode === "dm" && userId2 && senderId) {
             const messages = await prisma.message.findMany({
                 where: {
                     OR: [
-                        { senderId: session.user.id as string, receiverId: userId2 },
-                        { senderId: userId2, receiverId: session.user.id as string },
+                        { senderId: senderId, receiverId: userId2 },
+                        { senderId: userId2, receiverId: senderId },
                     ]
                 },
-                include: { sender: true },
+                include: { sender: { select: { id: true, name: true, image: true, username: true } } },
                 orderBy: { createdAt: "asc" },
                 take: 50,
             });
@@ -63,7 +59,7 @@ export async function POST(req: Request) {
                 senderId: session.user.id as string,
                 receiverId: receiverId || null,
             },
-            include: { sender: true }
+            include: { sender: { select: { id: true, name: true, image: true, username: true } } }
         });
 
         return NextResponse.json(message);

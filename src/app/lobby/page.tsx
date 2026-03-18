@@ -52,43 +52,32 @@ function LobbyContent() {
         }
     }, [searchParams]);
 
+    // Parallel fetch: profile + friends + rooms all at once for max speed
     useEffect(() => {
-        fetch("/api/user/profile").then(r => r.json()).then(d => { if (d?.id) setCurrentUserId(d.id); }).catch(() => {});
-        fetch("/api/friends").then(r => r.json()).then(d => {
-            if (d && d.sent && d.received) {
+        if (status !== "authenticated") return;
+
+        Promise.all([
+            fetch("/api/user/profile").then(r => r.json()).catch(() => null),
+            fetch("/api/friends").then(r => r.json()).catch(() => null),
+            fetch("/api/rooms").then(r => r.json()).catch(() => null),
+        ]).then(([profile, friendsData, roomsData]) => {
+            if (profile?.id) setCurrentUserId(profile.id);
+            if (friendsData?.sent && friendsData?.received) {
                 const accepted = [
-                    ...d.sent.filter((r: any) => r.status === "accepted").map((r: any) => r.receiver),
-                    ...d.received.filter((r: any) => r.status === "accepted").map((r: any) => r.sender)
+                    ...friendsData.sent.filter((r: any) => r.status === "accepted").map((r: any) => r.receiver),
+                    ...friendsData.received.filter((r: any) => r.status === "accepted").map((r: any) => r.sender)
                 ];
                 setFriends(accepted);
             }
-        }).catch(() => {});
-    }, []);
+            if (Array.isArray(roomsData)) setRooms(roomsData);
+            setLoadingRooms(false);
+        });
+    }, [status]);
 
     const [newRoom, setNewRoom] = useState({ name: "", subject: "General", isLocked: false, password: "" });
     const [protectedRoom, setProtectedRoom] = useState<any>(null);
     const [inputPassword, setInputPassword] = useState("");
     const [passwordError, setPasswordError] = useState(false);
-
-    // Fetch rooms from the database on load
-    useEffect(() => {
-        async function fetchRooms() {
-            try {
-                const res = await fetch("/api/rooms");
-                if (res.ok) {
-                    const data = await res.json();
-                    setRooms(data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch rooms:", err);
-            } finally {
-                setLoadingRooms(false);
-            }
-        }
-        if (status === "authenticated") {
-            fetchRooms();
-        }
-    }, [status]);
 
     const handleCreateRoom = (e: React.FormEvent) => {
         e.preventDefault();
@@ -525,8 +514,8 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
                     rawSender: m.sender
                 })));
             }
-        } else if (chatMode === "dm" && selectedFriendForChat) {
-            const res = await fetch(`/api/messages?mode=dm&userId=${selectedFriendForChat.id}`);
+        } else if (chatMode === "dm" && selectedFriendForChat && currentUserId) {
+            const res = await fetch(`/api/messages?mode=dm&userId=${selectedFriendForChat.id}&senderId=${currentUserId}`);
             if (res.ok) {
                 const data = await res.json();
                 setDmMessages(data.map((m: any) => ({
@@ -548,7 +537,7 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
         const autoPoll = async () => {
             if (!isActive) return;
             await fetchMessages();
-            setTimeout(autoPoll, 6000); // Recursively waits for the LAST request to finish before counting 6 seconds!
+            setTimeout(autoPoll, 4000);
         };
         autoPoll();
         return () => { isActive = false; };
