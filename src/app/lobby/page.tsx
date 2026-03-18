@@ -544,9 +544,14 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
     };
 
     useEffect(() => {
-        fetchMessages();
-        const interval = setInterval(fetchMessages, 2000);
-        return () => clearInterval(interval);
+        let isActive = true;
+        const autoPoll = async () => {
+            if (!isActive) return;
+            await fetchMessages();
+            setTimeout(autoPoll, 6000); // Recursively waits for the LAST request to finish before counting 6 seconds!
+        };
+        autoPoll();
+        return () => { isActive = false; };
     }, [chatMode, selectedFriendForChat, currentUserId]);
 
     useEffect(() => {
@@ -737,8 +742,8 @@ function ChatMessage({ user, time, message, isMe, isOnline, isRead, onProfileCli
         <div className={`flex flex-col group/message ${isMe ? "items-end text-right" : "items-start text-left"}`}>
             <div className="flex items-center gap-2 mb-2 cursor-pointer group" onClick={onProfileClick}>
                 {!isMe && isOnline && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" title="Online" />}
-                <span className={`text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors ${!isMe ? "text-purple-400 group-hover:text-white" : "text-gray-400"}`}>{user}</span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-gray-600">{time}</span>
+                <span className={`text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors ${!isMe ? "text-purple-500 font-black group-hover:text-black dark:group-hover:text-white" : "text-gray-600 dark:text-gray-400"}`}>{user}</span>
+                <span className="text-[9px] sm:text-[10px] font-bold text-gray-800 dark:text-gray-600">{time}</span>
             </div>
             
             <div className={`relative px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm shadow-xl flex items-end gap-3 ${isMe ? "bg-purple-gradient text-white rounded-tr-none" : "bg-white/[0.05] border border-white/5 text-gray-200 rounded-tl-none"}`}>
@@ -766,6 +771,22 @@ function ChatMessage({ user, time, message, isMe, isOnline, isRead, onProfileCli
 }
 
 function SettingsView() {
+    const [lightMode, setLightMode] = useState(false);
+
+    useEffect(() => {
+        if (lightMode) {
+            document.documentElement.style.filter = "invert(1) hue-rotate(180deg)";
+            document.documentElement.style.backgroundColor = "#fff";
+        } else {
+            document.documentElement.style.filter = "none";
+            document.documentElement.style.backgroundColor = "#000";
+        }
+        return () => {
+            document.documentElement.style.filter = "none";
+            document.documentElement.style.backgroundColor = "";
+        };
+    }, [lightMode]);
+
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -788,11 +809,13 @@ function SettingsView() {
                     title="Notifications"
                     desc="Custom sounds for Pomodoro and messages."
                 />
-                <SettingsCard
-                    icon={<Moon size={24} />}
-                    title="Theme Engine"
-                    desc="Choose between AMOLED dark or Neon purple."
-                />
+                <div onClick={() => setLightMode(!lightMode)}>
+                    <SettingsCard
+                        icon={<Moon size={24} />}
+                        title="Theme Engine"
+                        desc={lightMode ? "Currently running Light Mode. Click to switch to Dark!" : "Currently running Dark Mode. Click to switch to Light!"}
+                    />
+                </div>
             </div>
         </motion.div>
     );
