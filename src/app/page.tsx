@@ -154,10 +154,10 @@ export default function LandingPage() {
                         <motion.button
                             whileHover={{ scale: 1.05, background: "rgba(255,255,255,0.08)" }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => router.push("/lobby")}
+                            onClick={() => router.push("/docs")}
                             className="px-14 py-6 rounded-2xl glass-panel font-black text-xl flex items-center gap-4 transition-all"
                         >
-                            View Lobbies
+                            View Docs
                         </motion.button>
                     </div>
                 </motion.div>
@@ -281,25 +281,24 @@ export default function LandingPage() {
                     <div>
                         <h4 className="text-white font-black mb-8 text-lg uppercase tracking-widest">Platform</h4>
                         <ul className="space-y-4 text-gray-500 font-bold">
-                            <li><a href="#" className="hover:text-purple-400 transition-colors">Lobby Hub</a></li>
-                            <li><a href="#" className="hover:text-purple-400 transition-colors">AI Systems</a></li>
-                            <li><a href="#" className="hover:text-purple-400 transition-colors">Security</a></li>
+                            <li><a href="/lobby" className="hover:text-purple-400 transition-colors">Lobby Hub</a></li>
+                            <li><a href="/docs" className="hover:text-purple-400 transition-colors">Documentation</a></li>
+                            <li><a href="/privacy" className="hover:text-purple-400 transition-colors">Privacy</a></li>
                         </ul>
                     </div>
                     <div>
                         <h4 className="text-white font-black mb-8 text-lg uppercase tracking-widest">Connect</h4>
                         <ul className="space-y-4 text-gray-500 font-bold">
-                            <li><a href="#" className="hover:text-purple-400 transition-colors">Discord</a></li>
-                            <li><a href="#" className="hover:text-purple-400 transition-colors">Twitter (X)</a></li>
-                            <li><a href="#" className="hover:text-purple-400 transition-colors">GitHub</a></li>
+                            <li><a href="https://discordapp.com/users/1324369647625306112" target="_blank" rel="noopener noreferrer" className="hover:text-purple-400 transition-colors">Discord</a></li>
+                            <li><a href="https://github.com/guriopdev" target="_blank" rel="noopener noreferrer" className="hover:text-purple-400 transition-colors">GitHub</a></li>
                         </ul>
                     </div>
                 </div>
                 <div className="max-w-7xl mx-auto px-6 mt-24 pt-12 border-t border-white/5 flex justify-between items-center text-gray-600 text-sm font-bold uppercase tracking-widest">
                     <div>© 2026 StudySync Labs. All Rights Reserved.</div>
                     <div className="flex gap-12">
-                        <a href="#">Privacy</a>
-                        <a href="#">License</a>
+                        <a href="/privacy" className="hover:text-purple-400 transition-colors">Privacy</a>
+                        <a href="/license" className="hover:text-purple-400 transition-colors">License</a>
                     </div>
                 </div>
             </footer>
@@ -367,12 +366,14 @@ function ElevatedCard({ icon, title, description, color }: { icon: React.ReactNo
                 <p className="text-gray-400 leading-relaxed font-medium text-xl">{description}</p>
             </div>
 
-            <motion.div
-                whileHover={{ x: 10 }}
-                className="flex items-center gap-4 text-sm font-black cursor-pointer text-gray-500 group-hover:text-white transition-colors uppercase tracking-[0.2em]"
-            >
-                View Documentation <ArrowRight size={20} />
-            </motion.div>
+            <a href="/docs">
+                <motion.div
+                    whileHover={{ x: 10 }}
+                    className="flex items-center gap-4 text-sm font-black cursor-pointer text-gray-500 group-hover:text-white transition-colors uppercase tracking-[0.2em]"
+                >
+                    View Documentation <ArrowRight size={20} />
+                </motion.div>
+            </a>
         </motion.div>
     );
 }
