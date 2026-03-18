@@ -98,8 +98,8 @@ export default function SetupProfilePage() {
                         <Sparkles size={32} />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black italic tracking-tighter uppercase leading-none">{isEditable ? "Modify" : "Initialize"} <span className="text-purple-500">Identity</span></h1>
-                        <p className="text-[10px] text-gray-700 font-black uppercase tracking-[0.4em] italic mt-2">{isEditable ? "Operational_Update_Protocol" : "New_Node_Registration"}</p>
+                        <h1 className="text-4xl font-black italic tracking-tighter uppercase leading-none">{isEditable ? "Edit" : "Setup"} <span className="text-purple-500">Profile</span></h1>
+                        <p className="text-[10px] text-gray-700 font-black uppercase tracking-[0.4em] italic mt-2">{isEditable ? "Update your details" : "Create your profile"}</p>
                     </div>
                 </div>
 
@@ -138,7 +138,7 @@ export default function SetupProfilePage() {
                                 <Camera size={18} />
                             </motion.button>
                         </div>
-                        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-800 italic">Avatar_Secure_Link</p>
+                        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-gray-800 italic">Profile Picture</p>
                     </div>
 
                     {isEditable ? (
@@ -146,7 +146,7 @@ export default function SetupProfilePage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
                                     <label className="block text-[10px] font-black uppercase text-gray-700 mb-4 tracking-[0.3em] italic flex items-center gap-3">
-                                        <Hash size={14} className="text-purple-500" /> Tactical_Name
+                                        <Hash size={14} className="text-purple-500" /> Username
                                     </label>
                                     <input
                                         required
@@ -157,7 +157,7 @@ export default function SetupProfilePage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black uppercase text-gray-700 mb-4 tracking-[0.3em] italic">Identity_Pronouns</label>
+                                    <label className="block text-[10px] font-black uppercase text-gray-700 mb-4 tracking-[0.3em] italic">Pronouns</label>
                                     <input
                                         type="text"
                                         value={formData.pronouns}
@@ -171,7 +171,7 @@ export default function SetupProfilePage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
                                     <label className="block text-[10px] font-black uppercase text-gray-700 mb-4 tracking-[0.3em] italic flex items-center gap-3">
-                                        <MapPin size={14} className="text-purple-500" /> Operational_Zone
+                                        <MapPin size={14} className="text-purple-500" /> Location
                                     </label>
                                     <input
                                         type="text"
@@ -183,7 +183,7 @@ export default function SetupProfilePage() {
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-black uppercase text-gray-700 mb-4 tracking-[0.3em] italic flex items-center gap-3">
-                                        <Book size={14} className="text-purple-500" /> Education_Core
+                                        <Book size={14} className="text-purple-500" /> Education
                                     </label>
                                     <input
                                         type="text"
@@ -196,13 +196,13 @@ export default function SetupProfilePage() {
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-black uppercase text-gray-700 mb-4 tracking-[0.3em] italic">Operational_Bio</label>
+                                <label className="block text-[10px] font-black uppercase text-gray-700 mb-4 tracking-[0.3em] italic">About Me</label>
                                 <textarea
                                     value={formData.bio}
                                     onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                     rows={4}
                                     className="w-full px-8 py-5 rounded-3xl bg-white/[0.02] border border-white/5 focus:border-purple-500/40 outline-none font-black italic tracking-tight uppercase shadow-inner resize-none leading-relaxed"
-                                    placeholder="Define your objectives..."
+                                    placeholder="Tell us about yourself..."
                                 />
                             </div>
 
@@ -212,7 +212,7 @@ export default function SetupProfilePage() {
                                 type="submit"
                                 className="w-full py-8 rounded-[2rem] bg-purple-gradient text-white font-black text-xl italic tracking-tighter uppercase shadow-3xl"
                             >
-                                Update Deployment
+                                Save Changes
                             </motion.button>
                         </div>
                     ) : (
@@ -226,7 +226,7 @@ export default function SetupProfilePage() {
                                 >
                                     <div>
                                         <label className="block text-[10px] font-black uppercase tracking-[0.4em] text-gray-700 mb-6 italic flex items-center gap-4">
-                                            <Hash size={16} className="text-purple-500" /> Designation_Identifier (Required)
+                                            <Hash size={16} className="text-purple-500" /> Choose a Username (Required)
                                         </label>
                                         <div className="relative group">
                                             <User className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-700 group-focus-within:text-purple-500 transition-colors" size={24} />
@@ -235,20 +235,20 @@ export default function SetupProfilePage() {
                                                 type="text"
                                                 value={formData.username}
                                                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                                placeholder="Unique_ID..."
+                                                placeholder="Your username..."
                                                 className="w-full pl-16 pr-8 py-6 rounded-[1.8rem] bg-white/[0.02] border border-white/5 focus:border-purple-500/40 outline-none transition-all text-xl font-black italic tracking-tight uppercase shadow-inner"
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-black uppercase tracking-[0.4em] text-gray-700 mb-6 italic">Identity_Pronouns</label>
+                                        <label className="block text-[10px] font-black uppercase tracking-[0.4em] text-gray-700 mb-6 italic">Pronouns</label>
                                         <select
                                             value={formData.pronouns}
                                             onChange={(e) => setFormData({ ...formData, pronouns: e.target.value })}
                                             className="w-full px-8 py-6 rounded-[1.8rem] bg-white/[0.02] border border-white/5 appearance-none focus:outline-none focus:border-purple-500/40 font-black italic tracking-tight uppercase shadow-inner text-gray-500 cursor-pointer"
                                         >
-                                            <option value="" className="bg-[#050505]">Select_Protocol...</option>
+                                            <option value="" className="bg-[#050505]">Select pronouns...</option>
                                             <option value="he/him" className="bg-[#050505]">He / Him</option>
                                             <option value="she/her" className="bg-[#050505]">She / Her</option>
                                             <option value="they/them" className="bg-[#050505]">They / Them</option>
@@ -265,7 +265,7 @@ export default function SetupProfilePage() {
                                             disabled={!formData.username}
                                             className="w-full py-8 rounded-[2rem] bg-purple-gradient text-white font-black text-xl italic tracking-tighter uppercase shadow-3xl flex items-center justify-center gap-4 disabled:opacity-20"
                                         >
-                                            Next_Phase <ArrowRight size={24} />
+                                            Continue <ArrowRight size={24} />
                                         </motion.button>
                                     </div>
                                 </motion.div>
@@ -280,19 +280,19 @@ export default function SetupProfilePage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div>
                                             <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-gray-700 mb-6 italic flex items-center gap-4">
-                                                <MapPin size={18} className="text-purple-500" /> Geographical_Core
+                                                <MapPin size={18} className="text-purple-500" /> Your Location
                                             </label>
                                             <input
                                                 type="text"
                                                 value={formData.country}
                                                 onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                                                placeholder="Location_Ping"
+                                                placeholder="e.g. India, USA..."
                                                 className="w-full px-8 py-6 rounded-[1.8rem] bg-white/[0.02] border border-white/5 focus:border-purple-500/40 outline-none font-black italic tracking-tight uppercase shadow-inner"
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-gray-700 mb-6 italic flex items-center gap-4">
-                                                <Book size={18} className="text-purple-500" /> Education_Stream
+                                                <Book size={18} className="text-purple-500" /> Field of Study
                                             </label>
                                             <input
                                                 type="text"
@@ -305,11 +305,11 @@ export default function SetupProfilePage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-gray-700 mb-6 italic">Tactical_Bio</label>
+                                        <label className="block text-[10px] font-black uppercase tracking-[0.3em] text-gray-700 mb-6 italic">About You</label>
                                         <textarea
                                             value={formData.bio}
                                             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                            placeholder="Declare focus objectives..."
+                                            placeholder="Tell us about yourself..."
                                             rows={4}
                                             className="w-full px-8 py-6 rounded-[2rem] bg-white/[0.02] border border-white/5 focus:border-purple-500/40 outline-none font-black italic tracking-tight uppercase shadow-inner resize-none leading-relaxed"
                                         />
@@ -329,7 +329,7 @@ export default function SetupProfilePage() {
                                             type="submit"
                                             className="flex-[2] py-7 rounded-[2rem] bg-purple-gradient text-white font-black text-xl italic tracking-tighter uppercase shadow-3xl"
                                         >
-                                            Authorize Identity
+                                            Create Profile
                                         </motion.button>
                                     </div>
                                 </motion.div>

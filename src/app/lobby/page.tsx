@@ -210,7 +210,7 @@ function LobbyContent() {
                                 <div className="flex items-center gap-8 group">
                                     <div className="relative flex-1">
                                         <div className="absolute -inset-1 bg-purple-500/10 rounded-2xl blur opacity-0 group-focus-within:opacity-100 transition duration-500" />
-                                        <div className="relative bg-white/[0.02] border border-white/10 rounded-2xl px-6 py-5 flex items-center gap-4 min-w-[320px]">
+                                        <div className="relative bg-white/[0.02] border border-white/10 rounded-2xl px-6 py-5 flex items-center gap-4 min-w-[200px] md:min-w-[280px] xl:min-w-[320px]">
                                             <Search className="text-gray-600" size={20} />
                                             <input
                                                 type="text"
@@ -338,7 +338,7 @@ function LobbyContent() {
                                                     type="password"
                                                     value={newRoom.password}
                                                     onChange={(e) => setNewRoom({ ...newRoom, password: e.target.value })}
-                                                    placeholder="SYNC_WORDS"
+                                                    placeholder="Room password"
                                                     className="w-full px-10 py-7 rounded-[2rem] bg-white/[0.03] border border-white/10 focus:border-purple-500/40 outline-none transition-all font-black text-2xl tracking-[0.4em] text-center italic placeholder:text-gray-900"
                                                 />
                                             </motion.div>
@@ -383,7 +383,7 @@ function LobbyContent() {
                             </div>
 
                             <h2 className="text-2xl font-black mb-2 uppercase tracking-tight">Protected Room</h2>
-                            <p className="text-gray-500 font-medium mb-8 italic">"{protectedRoom.name}" requires sync words.</p>
+                            <p className="text-gray-500 font-medium mb-8 italic">"{protectedRoom.name}" requires a password.</p>
 
                             <form onSubmit={verifyPassword} className="space-y-6">
                                 <div>
@@ -396,11 +396,11 @@ function LobbyContent() {
                                             setInputPassword(e.target.value);
                                             setPasswordError(false);
                                         }}
-                                        placeholder="Enter sync words..."
+                                        placeholder="Enter room password..."
                                         className={`w-full px-6 py-4 rounded-2xl bg-white/5 border ${passwordError ? 'border-red-500/50' : 'border-white/10'} focus:border-purple-500/50 outline-none transition-all font-bold text-center text-xl tracking-widest`}
                                     />
                                     {passwordError && (
-                                        <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-3 animate-bounce">Incorrect Sync Words</p>
+                                        <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-3 animate-bounce">Incorrect Password</p>
                                     )}
                                 </div>
                                 <button type="submit" className="w-full py-5 rounded-2xl bg-purple-gradient font-black text-lg shadow-xl shadow-purple-500/20 hover:scale-[1.02] transition-transform">
@@ -636,7 +636,7 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
                                 {chatMode === "global" ? "Global Network" : (selectedFriendForChat ? selectedFriendForChat.name : "Friends")}
                             </h2>
                             <p className="text-gray-500 font-medium italic text-sm">
-                                {chatMode === "global" && "Synced with everyone in the StudySync community."}
+                                {chatMode === "global" && "Connected with everyone in the StudySync community."}
                                 {chatMode === "dm" && !selectedFriendForChat && "Select a friend to start chatting."}
                                 {chatMode === "dm" && selectedFriendForChat && "End-to-end encrypted private chat."}
                             </p>

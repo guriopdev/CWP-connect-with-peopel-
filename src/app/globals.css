@@ -112,3 +112,33 @@ nextjs-portal {
   pointer-events: none !important;
   visibility: hidden !important;
 }
+
+/* Hide large decorative elements on mobile/tablet */
+.hide-on-mobile {
+  display: block;
+}
+
+@media (max-width: 1024px) {
+  .hide-on-mobile {
+    display: none;
+  }
+}
+
+/* iPad / Tablet Responsive Adjustments (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Reduce oversized fonts for tablet */
+  h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem) !important;
+  }
+
+  /* Make glass panels fit tablet screens */
+  .glass-panel {
+    border-radius: 1.5rem;
+  }
+
+  /* Prevent content overflow on tablets */
+  main, section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

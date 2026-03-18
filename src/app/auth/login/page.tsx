@@ -33,8 +33,8 @@ export default function LoginPage() {
                     </motion.div>
                 </div>
 
-                <h1 className="text-5xl font-black mb-4 italic tracking-tighter uppercase leading-none">Access <span className="text-purple-500">Core</span></h1>
-                <p className="text-[11px] text-gray-700 font-black mb-16 uppercase tracking-[0.4em] italic">Operational_Sync_Initialized</p>
+                <h1 className="text-5xl font-black mb-4 italic tracking-tighter uppercase leading-none">Welcome <span className="text-purple-500">Back</span></h1>
+                <p className="text-[11px] text-gray-700 font-black mb-16 uppercase tracking-[0.4em] italic">Sign in to continue</p>
 
                 <div className="space-y-6 mb-16">
                     <motion.button
@@ -44,16 +44,16 @@ export default function LoginPage() {
                         className="w-full py-6 px-8 rounded-[1.8rem] bg-white/[0.01] border border-white/5 flex items-center justify-center gap-6 text-sm font-black italic tracking-[0.2em] transition-all hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] group"
                     >
                         <img src="https://authjs.dev/img/providers/google.svg" className="w-6 h-6 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] transition-all" alt="Google" />
-                        CONTINUE_WITH_GOOGLE
+                        Continue with Google
                     </motion.button>
                 </div>
 
                 <p className="text-[10px] text-gray-700 font-black italic tracking-widest uppercase leading-loose border-t border-white/5 pt-12">
-                    Establishing secure uplink. <br /> Deployment successful in <span className="text-purple-500">NODE_01</span>
+                    You're one click away from <br /> joining <span className="text-purple-500">StudySync</span>
                 </p>
 
                 <div className="mt-12 flex items-center justify-center gap-3 text-gray-800 font-black text-[9px] tracking-[0.3em] uppercase italic">
-                    <Globe size={14} className="text-purple-500/40" /> Global-Operational-v2.0
+                    <Globe size={14} className="text-purple-500/40" /> StudySync v2.0
                 </div>
             </motion.div>
         </div>

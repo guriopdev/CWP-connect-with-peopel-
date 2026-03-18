@@ -227,7 +227,7 @@ export default function LandingPage() {
                     <ElevatedCard
                         icon={<Shield size={48} />}
                         title="Secure & Private"
-                        description="Protect your study sessions with custom sync words."
+                        description="Protect your study sessions with room passwords."
                         color="blue"
                     />
                 </div>

@@ -53,19 +53,19 @@ export default function AIBotPage() {
 
                 <div className="flex items-center justify-center gap-4 mb-12">
                     <div className="px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-[10px] font-black tracking-[0.4em] text-purple-400 uppercase italic">
-                        Deployment_Phase: 01
+                        Coming Soon
                     </div>
                 </div>
 
                 <p className="text-xl text-gray-500 mb-20 font-black italic tracking-tight uppercase max-w-2xl mx-auto leading-relaxed">
-                    The ultimate cognitive companion is being initialized. <br /> Ask doubts, get summaries, and optimize your focus core automatically.
+                    Our AI study assistant is almost ready. <br /> Ask doubts, get summaries, and boost your productivity automatically.
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left max-w-2xl mx-auto mb-20">
-                    <FutureFeature icon={<Stars size={20} />} title="INSTANT DOUBT SOLVING" desc="Real-time pedagogical assistance." />
-                    <FutureFeature icon={<Brain size={20} />} title="FOCUS ANALYTICS" desc="Data-driven productivity insights." />
-                    <FutureFeature icon={<Sparkles size={20} />} title="SMART SCHEDULING" desc="Automated operational planning." />
-                    <FutureFeature icon={<Bot size={20} />} title="AI ACCOUNTABILITY" desc="Autonomous focus enforcement." />
+                    <FutureFeature icon={<Stars size={20} />} title="INSTANT DOUBT SOLVING" desc="Get answers to your questions in real-time." />
+                    <FutureFeature icon={<Brain size={20} />} title="FOCUS ANALYTICS" desc="Track your study habits and improve." />
+                    <FutureFeature icon={<Sparkles size={20} />} title="SMART SCHEDULING" desc="Automatically plan your study sessions." />
+                    <FutureFeature icon={<Bot size={20} />} title="AI ACCOUNTABILITY" desc="Stay on track with friendly reminders." />
                 </div>
 
                 <div className="mt-16">
