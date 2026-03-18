@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
     LayoutDashboard, MessageSquare, LogOut,
-    Search, Plus, Users, Lock, X, Sparkles,
+    Search, Plus, Users, Lock, X, Sparkles, ArrowLeft,
     Send, Shield, Bell, Moon, Settings, CheckCheck, Check
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -177,7 +177,7 @@ function LobbyContent() {
                         active={activeTab === "chat"}
                         onClick={() => setActiveTab("chat")}
                         icon={<MessageSquare size={28} />}
-                        label="NETWORK"
+                        label="MESSAGE"
                     />
                     <div className="md:mt-auto">
                         <SidebarIcon icon={<LogOut size={28} />} className="text-red-500/40 hover:text-red-600" label="LOGOUT" />
@@ -485,9 +485,15 @@ function RoomCard({ room, onJoin, isOwner, onDelete }: { room: any; onJoin: () =
 }
 
 function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setChatMode: (m: ChatMode) => void, friends: any[] }) {
-    const [showOnlineList, setShowOnlineList] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [selectedUserForProfile, setSelectedUserForProfile] = useState<any>(null);
+    const [selectedFriendForChat, setSelectedFriendForChat] = useState<any>(null);
     const router = useRouter();
+
+    useEffect(() => {
+        if (chatMode !== "dm") {
+            setSelectedFriendForChat(null);
+        }
+    }, [chatMode]);
 
     return (
         <motion.div
@@ -514,24 +520,26 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
 
             <div className="flex-1 p-8 md:p-12 flex flex-col min-h-0 relative">
                 <header className="mb-8 flex justify-between items-start">
-                    <div>
-                        <h2 className="text-3xl font-black uppercase tracking-tighter">
-                            {chatMode === "global" ? "Global Network" : "Direct Messages"}
-                        </h2>
-                        <p className="text-gray-500 font-medium italic text-sm">
-                            {chatMode === "global" && "Synced with everyone in the StudySync community."}
-                            {chatMode === "dm" && "Your private 1-on-1 conversations."}
-                        </p>
+                    <div className="flex items-center gap-4">
+                        {chatMode === "dm" && selectedFriendForChat && (
+                            <button 
+                                onClick={() => setSelectedFriendForChat(null)}
+                                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all mr-2"
+                            >
+                                <ArrowLeft size={24} />
+                            </button>
+                        )}
+                        <div>
+                            <h2 className="text-3xl font-black uppercase tracking-tighter">
+                                {chatMode === "global" ? "Global Network" : (selectedFriendForChat ? selectedFriendForChat.name : "Friends")}
+                            </h2>
+                            <p className="text-gray-500 font-medium italic text-sm">
+                                {chatMode === "global" && "Synced with everyone in the StudySync community."}
+                                {chatMode === "dm" && !selectedFriendForChat && "Select a friend to start chatting."}
+                                {chatMode === "dm" && selectedFriendForChat && "End-to-end encrypted private chat."}
+                            </p>
+                        </div>
                     </div>
-                    {chatMode === "dm" && (
-                        <button 
-                            onClick={() => setShowOnlineList(!showOnlineList)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${showOnlineList ? "bg-purple-500/20 text-purple-400 border border-purple-500/30" : "bg-white/5 text-gray-400 border border-white/10 hover:text-white"}`}
-                        >
-                            <Users size={14} className="opacity-70" />
-                            Friends List
-                        </button>
-                    )}
                 </header>
 
                 <div className="flex-1 space-y-6 overflow-y-auto mb-8 pr-4 custom-scrollbar">
@@ -543,9 +551,9 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
                     )}
                     {chatMode === "dm" && (
                         <>
-                            {!showOnlineList ? (
+                            {selectedFriendForChat ? (
                                 <>
-                                    <ChatMessage user="Friend" time="10:30 AM" message="Hey, are we studying today?" isMe={false} isOnline={true} />
+                                    <ChatMessage user={selectedFriendForChat.name} time="10:30 AM" message="Hey, are we studying today?" isMe={false} isOnline={true} onProfileClick={() => setSelectedUserForProfile(selectedFriendForChat)} />
                                     <ChatMessage user="You" time="10:32 AM" message="Yes! Join my room in 5 mins." isMe={true} isOnline={true} isRead={true} />
                                     <ChatMessage user="You" time="10:45 AM" message="Ready?" isMe={true} isOnline={true} isRead={false} />
                                 </>
@@ -557,13 +565,13 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
                                         </div>
                                     )}
                                     {friends.map(friend => (
-                                        <div key={friend.id} onClick={() => setSelectedUser(friend)} className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between cursor-pointer hover:border-purple-500/30 transition-all">
+                                        <div key={friend.id} onClick={() => setSelectedFriendForChat(friend)} className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between cursor-pointer hover:border-purple-500/30 transition-all">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-purple-gradient text-white flex items-center justify-center font-bold text-lg overflow-hidden border border-white/5">
                                                     {friend.image ? <img src={friend.image} className="w-full h-full object-cover" /> : friend.name?.[0]}
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="font-bold text-sm truncate max-w-[120px]">{friend.name}</span>
+                                                    <span className="font-bold text-sm truncate max-w-[120px] text-white group-hover:text-purple-400 transition-colors cursor-pointer" onClick={(e) => { e.stopPropagation(); setSelectedUserForProfile(friend); }}>{friend.name}</span>
                                                     <span className="text-[10px] text-purple-400 font-black uppercase">{friend.username ? `@${friend.username}` : ""}</span>
                                                 </div>
                                             </div>
@@ -576,26 +584,29 @@ function ChatView({ chatMode, setChatMode, friends }: { chatMode: ChatMode, setC
                     )}
                 </div>
 
-                <div className="relative mt-auto">
-                    <input
-                        placeholder={
-                            chatMode === "global" ? "Message global network..." : "Type your message..."
-                        }
-                        className="w-full pl-6 pr-16 py-5 rounded-2xl bg-white/5 border border-white/10 focus:border-purple-500/50 outline-none transition-all font-bold text-sm"
-                    />
-                    <button className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-xl bg-purple-gradient text-white shadow-lg shadow-purple-500/20">
-                        <Send size={20} />
-                    </button>
-                </div>
+                {(chatMode === "global" || (chatMode === "dm" && selectedFriendForChat)) && (
+                    <div className="relative mt-auto">
+                        <input
+                            placeholder={
+                                chatMode === "global" ? "Message global network..." : `Message ${selectedFriendForChat.name}...`
+                            }
+                            className="w-full pl-6 pr-16 py-5 rounded-2xl bg-white/5 border border-white/10 focus:border-purple-500/50 outline-none transition-all font-bold text-sm"
+                        />
+                        <button className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-xl bg-purple-gradient text-white shadow-lg shadow-purple-500/20">
+                            <Send size={20} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             <ProfileModal 
-                user={selectedUser} 
-                isOpen={!!selectedUser} 
-                onClose={() => setSelectedUser(null)} 
+                user={selectedUserForProfile} 
+                isOpen={!!selectedUserForProfile} 
+                onClose={() => setSelectedUserForProfile(null)} 
                 onMessage={
-                    selectedUser ? () => {
-                        setSelectedUser(null);
+                    selectedUserForProfile ? () => {
+                        setSelectedFriendForChat(selectedUserForProfile);
+                        setSelectedUserForProfile(null);
                         setChatMode("dm");
                     } : undefined
                 }
