@@ -8,7 +8,8 @@ import Link from "next/link";
 import {
     LayoutDashboard, MessageSquare, LogOut,
     Search, Plus, Users, Lock, X, Sparkles, ArrowLeft, Flag,
-    Send, Shield, Bell, Moon, Settings, CheckCheck, Check
+    Send, Shield, Bell, Moon, Settings, CheckCheck, Check,
+    Reply, Forward, ImageIcon
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import InteractiveBackground from "@/components/InteractiveBackground";
@@ -491,6 +492,9 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
     const [globalMessages, setGlobalMessages] = useState<any[]>([]);
     const [dmMessages, setDmMessages] = useState<any[]>([]);
     const [messageInput, setMessageInput] = useState("");
+    const [replyTo, setReplyTo] = useState<any>(null);
+    const [imageUrl, setImageUrl] = useState("");
+    const [showImageInput, setShowImageInput] = useState(false);
     const router = useRouter();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -498,36 +502,31 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
+    const mapMsg = (m: any) => ({
+        id: m.id,
+        user: m.sender.name || "User",
+        time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        message: m.content,
+        imageUrl: m.imageUrl || null,
+        replyTo: m.replyTo ? { content: m.replyTo.content, senderName: m.replyTo.sender?.name || "User" } : null,
+        isMe: m.senderId === currentUserId,
+        isOnline: true,
+        isRead: false,
+        rawSender: m.sender
+    });
+
     const fetchMessages = async () => {
         if (chatMode === "global") {
             const res = await fetch("/api/messages?mode=global");
             if (res.ok) {
                 const data = await res.json();
-                setGlobalMessages(data.map((m: any) => ({
-                    id: m.id,
-                    user: m.sender.name || "User",
-                    time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    message: m.content,
-                    isMe: m.senderId === currentUserId,
-                    isOnline: true,
-                    isRead: false,
-                    rawSender: m.sender
-                })));
+                setGlobalMessages(data.map(mapMsg));
             }
         } else if (chatMode === "dm" && selectedFriendForChat && currentUserId) {
             const res = await fetch(`/api/messages?mode=dm&userId=${selectedFriendForChat.id}&senderId=${currentUserId}`);
             if (res.ok) {
                 const data = await res.json();
-                setDmMessages(data.map((m: any) => ({
-                    id: m.id,
-                    user: m.sender.name || "User",
-                    time: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    message: m.content,
-                    isMe: m.senderId === currentUserId,
-                    isOnline: true,
-                    isRead: false,
-                    rawSender: m.sender
-                })));
+                setDmMessages(data.map(mapMsg));
             }
         }
     };
@@ -548,16 +547,21 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
     }, [globalMessages, dmMessages]);
 
     const handleSendMessage = () => {
-        if (!messageInput.trim()) return;
+        if (!messageInput.trim() && !imageUrl.trim()) return;
         const out = messageInput;
-        setMessageInput(""); // Clear immediately for UX
+        const img = imageUrl.trim();
+        setMessageInput("");
+        setImageUrl("");
+        setShowImageInput(false);
+        setReplyTo(null);
         
-        // Optimistic UI Update for pure blazing fast UX
         const optimisticMsg = {
             id: Date.now().toString(),
             user: "You",
             time: "Just now",
             message: out,
+            imageUrl: img || null,
+            replyTo: replyTo ? { content: replyTo.message, senderName: replyTo.user } : null,
             isMe: true,
             isOnline: true,
             isRead: false,
@@ -567,15 +571,20 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
         if (chatMode === "global") setGlobalMessages(prev => [...prev, optimisticMsg]);
         else setDmMessages(prev => [...prev, optimisticMsg]);
         
-        // Fire database POST in the background without blocking the UI
         fetch("/api/messages", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 content: out,
+                imageUrl: img || null,
+                replyToId: replyTo?.id || null,
                 receiverId: chatMode === "dm" && selectedFriendForChat ? selectedFriendForChat.id : null
             })
-        }).then(() => fetchMessages()); // quietly re-sync exact timestamps
+        }).then(() => fetchMessages());
+    };
+
+    const handleForward = (msg: any) => {
+        setMessageInput(`[Forwarded] ${msg.message}`);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -645,7 +654,7 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
                                 </div>
                             )}
                             {globalMessages.map(msg => (
-                                <ChatMessage key={msg.id} {...msg} onProfileClick={() => !msg.isMe && setSelectedUserForProfile(msg.rawSender)} />
+                                <ChatMessage key={msg.id} {...msg} onProfileClick={() => !msg.isMe && setSelectedUserForProfile(msg.rawSender)} onReply={() => setReplyTo(msg)} onForward={() => handleForward(msg)} />
                             ))}
                             <div ref={messagesEndRef} />
                         </>
@@ -661,7 +670,7 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
                                         </div>
                                     )}
                                     {dmMessages.map(msg => (
-                                        <ChatMessage key={msg.id} {...msg} onProfileClick={() => !msg.isMe && setSelectedUserForProfile(msg.rawSender)} />
+                                        <ChatMessage key={msg.id} {...msg} onProfileClick={() => !msg.isMe && setSelectedUserForProfile(msg.rawSender)} onReply={() => setReplyTo(msg)} onForward={() => handleForward(msg)} />
                                     ))}
                                     <div ref={messagesEndRef} />
                                 </>
@@ -693,19 +702,49 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
                 </div>
 
                 {(chatMode === "global" || (chatMode === "dm" && selectedFriendForChat)) && (
-                    <div className="relative mt-auto">
-                        <input
-                            value={messageInput}
-                            onChange={(e) => setMessageInput(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            placeholder={
-                                chatMode === "global" ? "Message global network..." : `Message ${selectedFriendForChat.name}...`
-                            }
-                            className="w-full pl-6 pr-16 py-5 rounded-2xl bg-white/5 border border-white/10 focus:border-purple-500/50 outline-none transition-all font-bold text-sm"
-                        />
-                        <button onClick={handleSendMessage} className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-xl bg-purple-gradient text-white shadow-lg shadow-purple-500/20 hover:scale-110 transition-transform">
-                            <Send size={20} />
-                        </button>
+                    <div className="relative mt-auto space-y-2">
+                        {/* Reply Preview Bar */}
+                        {replyTo && (
+                            <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                <Reply size={14} className="text-purple-400 flex-shrink-0" />
+                                <span className="text-xs text-purple-300 font-bold truncate flex-1">Replying to {replyTo.user}: {replyTo.message?.substring(0, 60)}{replyTo.message?.length > 60 ? "..." : ""}</span>
+                                <button onClick={() => setReplyTo(null)} className="text-gray-500 hover:text-white"><X size={14} /></button>
+                            </div>
+                        )}
+                        {/* Image URL Input */}
+                        {showImageInput && (
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+                                <ImageIcon size={14} className="text-purple-400 flex-shrink-0" />
+                                <input
+                                    value={imageUrl}
+                                    onChange={(e) => setImageUrl(e.target.value)}
+                                    placeholder="Paste image URL (jpg, png, gif, webp)..."
+                                    className="flex-1 bg-transparent outline-none text-xs font-bold text-gray-300 placeholder-gray-600"
+                                />
+                                <button onClick={() => { setShowImageInput(false); setImageUrl(""); }} className="text-gray-500 hover:text-white"><X size={14} /></button>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowImageInput(!showImageInput)}
+                                className={`p-3 rounded-xl border transition-all ${showImageInput ? "bg-purple-500/20 border-purple-500/30 text-purple-400" : "bg-white/5 border-white/10 text-gray-500 hover:text-white"}`}
+                                title="Attach image"
+                            >
+                                <ImageIcon size={18} />
+                            </button>
+                            <input
+                                value={messageInput}
+                                onChange={(e) => setMessageInput(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder={
+                                    chatMode === "global" ? "Message global network..." : `Message ${selectedFriendForChat.name}...`
+                                }
+                                className="flex-1 pl-5 pr-4 py-5 rounded-2xl bg-white/5 border border-white/10 focus:border-purple-500/50 outline-none transition-all font-bold text-sm"
+                            />
+                            <button onClick={handleSendMessage} className="p-3 rounded-xl bg-purple-gradient text-white shadow-lg shadow-purple-500/20 hover:scale-110 transition-transform">
+                                <Send size={20} />
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -726,7 +765,7 @@ function ChatView({ chatMode, setChatMode, friends, currentUserId }: { chatMode:
     );
 }
 
-function ChatMessage({ user, time, message, isMe, isOnline, isRead, onProfileClick }: any) {
+function ChatMessage({ user, time, message, imageUrl, replyTo, isMe, isOnline, isRead, onProfileClick, onReply, onForward }: any) {
     return (
         <div className={`flex flex-col group/message ${isMe ? "items-end text-right" : "items-start text-left"}`}>
             <div className="flex items-center gap-2 mb-2 cursor-pointer group" onClick={onProfileClick}>
@@ -734,19 +773,37 @@ function ChatMessage({ user, time, message, isMe, isOnline, isRead, onProfileCli
                 <span className={`text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors ${!isMe ? "text-purple-500 font-black group-hover:text-black dark:group-hover:text-white" : "text-gray-600 dark:text-gray-400"}`}>{user}</span>
                 <span className="text-[9px] sm:text-[10px] font-bold text-gray-800 dark:text-gray-600">{time}</span>
             </div>
+
+            {/* Reply Quote */}
+            {replyTo && (
+                <div className={`mb-1 px-3 py-1.5 rounded-lg text-[10px] font-bold border-l-2 border-purple-500/50 bg-white/[0.03] text-gray-400 max-w-[250px] truncate ${isMe ? "text-right" : "text-left"}`}>
+                    <span className="text-purple-400">{replyTo.senderName}</span>: {replyTo.content?.substring(0, 50)}
+                </div>
+            )}
             
-            <div className={`relative px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm shadow-xl flex items-end gap-3 ${isMe ? "bg-purple-gradient text-white rounded-tr-none" : "bg-white/[0.05] border border-white/5 text-gray-200 rounded-tl-none"}`}>
-                <span>{message}</span>
-                
-                {/* Report Message Action */}
-                {!isMe && (
-                    <button className="absolute -right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover/message:opacity-100 p-2 text-gray-500 hover:text-red-400 transition-all" title="Report message">
-                        <Flag size={14} />
-                    </button>
+            <div className={`relative px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl font-bold text-xs sm:text-sm shadow-xl ${isMe ? "bg-purple-gradient text-white rounded-tr-none" : "bg-white/[0.05] border border-white/5 text-gray-200 rounded-tl-none"}`}>
+                {imageUrl && (
+                    <img src={imageUrl} alt="attachment" className="max-w-[200px] max-h-[150px] rounded-xl mb-2 object-cover border border-white/10" />
                 )}
+                {message && <span>{message}</span>}
+                
+                {/* Action Buttons */}
+                <div className={`absolute ${isMe ? "-left-24" : "-right-24"} top-1/2 -translate-y-1/2 opacity-0 group-hover/message:opacity-100 flex items-center gap-1 transition-all`}>
+                    <button onClick={onReply} className="p-1.5 text-gray-500 hover:text-purple-400 transition-all" title="Reply">
+                        <Reply size={13} />
+                    </button>
+                    <button onClick={onForward} className="p-1.5 text-gray-500 hover:text-blue-400 transition-all" title="Forward">
+                        <Forward size={13} />
+                    </button>
+                    {!isMe && (
+                        <button className="p-1.5 text-gray-500 hover:text-red-400 transition-all" title="Report">
+                            <Flag size={13} />
+                        </button>
+                    )}
+                </div>
                 
                 {isMe && (
-                    <span className="opacity-70 mb-0.5" title={isRead ? "Read" : "Sent"}>
+                    <span className="opacity-70 ml-2 inline-block align-bottom" title={isRead ? "Read" : "Sent"}>
                         {isRead ? (
                             <CheckCheck size={14} className="text-emerald-300 drop-shadow-[0_0_5px_rgba(52,211,153,0.8)]" />
                         ) : (

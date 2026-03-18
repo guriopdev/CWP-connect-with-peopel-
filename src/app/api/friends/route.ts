@@ -11,17 +11,20 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const sent = await prisma.friendRequest.findMany({
-            where: { senderId: session.user.id },
-            include: { receiver: { select: { id: true, name: true, username: true, image: true, bio: true, country: true, education: true } } },
-            orderBy: { createdAt: "desc" },
-        });
+        const friendSelect = { id: true, name: true, username: true, image: true, bio: true, country: true, education: true };
 
-        const received = await prisma.friendRequest.findMany({
-            where: { receiverId: session.user.id },
-            include: { sender: { select: { id: true, name: true, username: true, image: true, bio: true, country: true, education: true } } },
-            orderBy: { createdAt: "desc" },
-        });
+        const [sent, received] = await Promise.all([
+            prisma.friendRequest.findMany({
+                where: { senderId: session.user.id },
+                include: { receiver: { select: friendSelect } },
+                orderBy: { createdAt: "desc" },
+            }),
+            prisma.friendRequest.findMany({
+                where: { receiverId: session.user.id },
+                include: { sender: { select: friendSelect } },
+                orderBy: { createdAt: "desc" },
+            })
+        ]);
 
         return NextResponse.json({ sent, received });
     } catch (error: any) {

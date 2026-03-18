@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
+const senderSelect = { id: true, name: true, image: true, username: true };
+
 export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
@@ -10,10 +12,15 @@ export async function GET(req: Request) {
         const userId2 = searchParams.get("userId");
         const senderId = searchParams.get("senderId");
 
+        const includeFields = {
+            sender: { select: senderSelect },
+            replyTo: { select: { id: true, content: true, sender: { select: { name: true } } } }
+        };
+
         if (mode === "global") {
             const messages = await prisma.message.findMany({
                 where: { receiverId: null },
-                include: { sender: { select: { id: true, name: true, image: true, username: true } } },
+                include: includeFields,
                 orderBy: { createdAt: "asc" },
                 take: 50,
             });
@@ -26,7 +33,7 @@ export async function GET(req: Request) {
                         { senderId: userId2, receiverId: senderId },
                     ]
                 },
-                include: { sender: { select: { id: true, name: true, image: true, username: true } } },
+                include: includeFields,
                 orderBy: { createdAt: "asc" },
                 take: 50,
             });
@@ -47,19 +54,34 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { content, receiverId } = body;
+        const { content, receiverId, imageUrl, replyToId } = body;
 
-        if (!content) {
-            return new NextResponse("Content is required", { status: 400 });
+        if (!content && !imageUrl) {
+            return new NextResponse("Content or image is required", { status: 400 });
+        }
+
+        // Validate image URL if provided (basic validation + size limit abuse prevention)
+        if (imageUrl) {
+            if (imageUrl.length > 500) {
+                return new NextResponse("Image URL too long (max 500 chars)", { status: 400 });
+            }
+            if (!imageUrl.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp|svg)/i) && !imageUrl.startsWith("https://")) {
+                return new NextResponse("Invalid image URL", { status: 400 });
+            }
         }
 
         const message = await prisma.message.create({
             data: {
-                content,
+                content: content || "",
+                imageUrl: imageUrl || null,
                 senderId: session.user.id as string,
                 receiverId: receiverId || null,
+                replyToId: replyToId || null,
             },
-            include: { sender: { select: { id: true, name: true, image: true, username: true } } }
+            include: {
+                sender: { select: senderSelect },
+                replyTo: { select: { id: true, content: true, sender: { select: { name: true } } } }
+            }
         });
 
         return NextResponse.json(message);
